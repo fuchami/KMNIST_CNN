@@ -9,9 +9,10 @@ from keras.layers import Conv2D, MaxPooling2D, Dense, GlobalAveragePooling2D
 from keras.layers import Activation, Flatten, BatchNormalization, Dropout, Input
 from keras.models import Sequential
 from keras.optimizers import SGD, Adam
-from keras.callbacks import EarlyStopping, LearningRateScheduler
+from keras.callbacks import EarlyStopping, LearningRateScheduler, ReduceLROnPlateau
 from keras.utils import to_categorical
 from keras import backend as K
+from adabound import AdaBound
 #%matplotlib inline
 
 #%% load kmnist dataset
@@ -92,46 +93,52 @@ base_lr = 0.001
 lr_decay_rate = 1 / 3
 lr_steps = 4
 reduce_lr = LearningRateScheduler(lambda ep: float(base_lr * lr_decay_rate ** (ep * lr_steps // epochs)), verbose=1)
+learning_rate_reduction = ReduceLROnPlateau(monitor='val_acc', 
+                                            patience=3, 
+                                            verbose=1, 
+                                            factor=0.5, 
+                                            min_lr=0.00001)
 input_shape = (28, 28, 1)
 
 """ build model """
 model = Sequential()
 
-model.add(Conv2D(32, (3,3), input_shape=input_shape))
-model.add(BatchNormalization())
+model.add(Conv2D(filters = 32, kernel_size = (3, 3), input_shape = (28, 28, 1), padding='same'))
 model.add(Activation('relu'))
-
-model.add(Conv2D(32, (3,3)))
+model.add(Conv2D(filters = 32, kernel_size = (3, 3)))
 model.add(Activation('relu'))
 model.add(MaxPooling2D(pool_size=(2,2)))
+model.add(Dropout(0.25))
 
-model.add(BatchNormalization())
-
-model.add(Conv2D(64, (3,3)))
+model.add(Conv2D(filters = 64, kernel_size = (3, 3)))
+model.add(Activation('relu'))
+model.add(Conv2D(filters = 64, kernel_size = (3, 3)))
 model.add(Activation('relu'))
 model.add(MaxPooling2D(pool_size=(2,2)))
+model.add(Dropout(0.25))
 
 model.add(Flatten())
-model.add(BatchNormalization())
-
-model.add(Dense(512))
-model.add(BatchNormalization())
+model.add(Dense(128))
 model.add(Activation('relu'))
-
-model.add(Dropout(0.25))
-model.add(Dense(label_num, activation='softmax'))
+model.add(Dropout(0.5))
+model.add(Dense(10))
+model.add(Activation('softmax'))
 
 model.summary()
 
 loss = keras.losses.categorical_crossentropy
-optimizer = SGD(lr=base_lr, momentum=0.9, decay=1e-6, nesterov=True)
+# optimizer = SGD(lr=base_lr, momentum=0.9, decay=1e-6, nesterov=True)
+optimizer = AdaBound(lr=1e-03,
+                final_lr=0.1,
+                gamma=1e-03,
+                weight_decay=0.,
+                amsbound=False)
 model.compile(loss=loss, optimizer=optimizer, metrics=['accuracy'])
 
 """ add ImageDataGenerator """
 from keras.preprocessing.image import ImageDataGenerator
 train_gen = ImageDataGenerator(rotation_range=20,
                                 width_shift_range=0.08,
-                                shear_range=0.2,
                                 height_shift_range=0.08,
                                 zoom_range=0.08)
 test_gen = ImageDataGenerator()
@@ -144,7 +151,8 @@ model.fit_generator(trainig_set,
                     steps_per_epoch = 48000//batch_size,
                     validation_data= test_set,
                     validation_steps=12000//batch_size,
-                    epochs=epochs)
+                    epochs=epochs,
+                    callbacks=[learning_rate_reduction])
 
 train_score = model.evaluate(train_x, train_y)
 validation_score = model.evaluate(valid_x, valid_y)
