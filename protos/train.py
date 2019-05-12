@@ -97,23 +97,28 @@ input_shape = (28, 28, 1)
 """ build model """
 model = Sequential()
 
-model.add(Conv2D(32, (3,3), padding='same', input_shape=input_shape))
+model.add(Conv2D(32, (3,3), input_shape=input_shape))
 model.add(BatchNormalization())
 model.add(Activation('relu'))
-model.add(Dropout(0.25))
 
-model.add(Conv2D(64, (3,3), strides=(2,2)))
-model.add(BatchNormalization())
+model.add(Conv2D(32, (3,3)))
 model.add(Activation('relu'))
-model.add(Dropout(0.25))
+model.add(MaxPooling2D(pool_size=(2,2)))
 
-model.add(Conv2D(128, (3,3), padding='same'))
 model.add(BatchNormalization())
+
+model.add(Conv2D(64, (3,3)))
 model.add(Activation('relu'))
-model.add(Dropout(0.25))
+model.add(MaxPooling2D(pool_size=(2,2)))
 
 model.add(Flatten())
-model.add(Dense(128, activation='relu'))
+model.add(BatchNormalization())
+
+model.add(Dense(512))
+model.add(BatchNormalization())
+model.add(Activation('relu'))
+
+model.add(Dropout(0.25))
 model.add(Dense(label_num, activation='softmax'))
 
 model.summary()
@@ -122,13 +127,24 @@ loss = keras.losses.categorical_crossentropy
 optimizer = SGD(lr=base_lr, momentum=0.9, decay=1e-6, nesterov=True)
 model.compile(loss=loss, optimizer=optimizer, metrics=['accuracy'])
 
+""" add ImageDataGenerator """
+from keras.preprocessing.image import ImageDataGenerator
+train_gen = ImageDataGenerator(rotation_range=20,
+                                width_shift_range=0.08,
+                                shear_range=0.2,
+                                height_shift_range=0.08,
+                                zoom_range=0.08)
+test_gen = ImageDataGenerator()
+
+trainig_set = train_gen.flow(train_x, train_y, batch_size=batch_size)
+test_set = train_gen.flow(valid_x, valid_y, batch_size=batch_size)
+
 """ model train """
-model.fit(train_x, train_y,
-            batch_size=batch_size,
-            epochs=epochs,
-            verbose=1,
-            validation_data=(valid_x, valid_y),
-            callbacks=[reduce_lr])
+model.fit_generator(trainig_set,
+                    steps_per_epoch = 48000//batch_size,
+                    validation_data= test_set,
+                    validation_steps=12000//batch_size,
+                    epochs=epochs)
 
 train_score = model.evaluate(train_x, train_y)
 validation_score = model.evaluate(valid_x, valid_y)
