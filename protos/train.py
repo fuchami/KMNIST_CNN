@@ -87,8 +87,11 @@ print('valid_y.shape :', valid_y.shape)
 #%% Let's train!
 batch_size =128
 label_num = 10
-epochs = 3
+epochs = 1
 base_lr = 0.001
+lr_decay_rate = 1 / 3
+lr_steps = 4
+reduce_lr = LearningRateScheduler(lambda ep: float(base_lr * lr_decay_rate ** (ep * lr_steps // epochs)), verbose=1)
 input_shape = (28, 28, 1)
 
 """ build model """
@@ -124,7 +127,8 @@ model.fit(train_x, train_y,
             batch_size=batch_size,
             epochs=epochs,
             verbose=1,
-            validation_data=(valid_x, valid_y))
+            validation_data=(valid_x, valid_y),
+            callbacks=[reduce_lr])
 
 train_score = model.evaluate(train_x, train_y)
 validation_score = model.evaluate(valid_x, valid_y)
@@ -133,3 +137,26 @@ print('Train loss :', train_score[0])
 print('Train accuracy :', train_score[1])
 print('validation loss :', validation_score[0])
 print('validation accuracy :', validation_score[1])
+
+#%% submit file 
+import pandas as pd
+test_x = np.load('./input/kmnist-test-imgs.npz')['arr_0']
+""" convert images """
+test_x = test_x[:, :, :, np.newaxis].astype('float32') / 255.0
+print(test_x.shape)
+
+predicts = []
+for t_x in test_x:
+    print(t_x.shape)
+    pred = model.predict(t_x, batch_size=1)
+    score = np.max(pred)
+    predicted.append(score)
+
+print(predicts.shape)
+
+submit = pd.DataFrame(data={"ImageId": [], "Label": []})
+
+submit.ImageId = list(range(1, predicts.shape[0]+1))
+submit.Label = predicts
+
+submit.to_csv(root.joinpath("/output/submit.csv"), index=False)
