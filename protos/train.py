@@ -3,8 +3,8 @@
 #%%
 import numpy as np
 import matplotlib.pyplot as plt
-from protos import load
 import keras
+import load
 from keras.layers import Conv2D, MaxPooling2D, Dense, GlobalAveragePooling2D
 from keras.layers import Activation, Flatten, BatchNormalization, Dropout, Input
 from keras.models import Sequential
@@ -12,12 +12,12 @@ from keras.optimizers import SGD, Adam
 from keras.callbacks import EarlyStopping, LearningRateScheduler
 from keras.utils import to_categorical
 from keras import backend as K
-%matplotlib inline
+#%matplotlib inline
 
 #%% load kmnist dataset
 
 kmnist_dl = load.KMNISTDataLoader()
-datapath = './input'
+datapath = '../input'
 train_x, train_y, valid_x, valid_y = kmnist_dl.load(datapath)
 
 #%% plot kminst dataset
@@ -140,23 +140,16 @@ print('validation accuracy :', validation_score[1])
 
 #%% submit file 
 import pandas as pd
-test_x = np.load('./input/kmnist-test-imgs.npz')['arr_0']
+test_x = np.load('../input/kmnist-test-imgs.npz')['arr_0']
 """ convert images """
 test_x = test_x[:, :, :, np.newaxis].astype('float32') / 255.0
 print(test_x.shape)
 
-predicts = []
-for t_x in test_x:
-    print(t_x.shape)
-    pred = model.predict(t_x, batch_size=1)
-    score = np.max(pred)
-    predicted.append(score)
-
-print(predicts.shape)
+predicts = np.argmax(model.predict(test_x), axis=1)
 
 submit = pd.DataFrame(data={"ImageId": [], "Label": []})
 
 submit.ImageId = list(range(1, predicts.shape[0]+1))
 submit.Label = predicts
 
-submit.to_csv(root.joinpath("/output/submit.csv"), index=False)
+submit.to_csv("../output/submit.csv", index=False)

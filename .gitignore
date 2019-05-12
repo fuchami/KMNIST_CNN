@@ -3,3 +3,4 @@
 /input/
 *.npz
 *.pyc
+*.csv
