@@ -90,9 +90,9 @@ valid_x = (valid_x-mean)/(std+1e-7)
 
 
 #%% Let's train!
-batch_size =128
+batch_size = 256
 label_num = 10
-epochs = 100
+epochs = 300
 base_lr = 0.001
 lr_decay_rate = 1 / 3
 lr_steps = 4
@@ -102,6 +102,12 @@ def lr_schedule(epoch):
         lrate = 0.0005
     if epoch > 100:
         lrate = 0.0003
+    if epoch > 150:
+        lrate = 0.001
+    if epoch > 200:
+        lrate = 0.0005
+    if epoch > 250:
+        lrate = 0.0001
     return lrate
 input_shape = (28, 28, 1)
 
@@ -112,9 +118,9 @@ model.summary()
 
 loss = keras.losses.categorical_crossentropy
 # optimizer = SGD(lr=base_lr, momentum=0.9, decay=1e-6, nesterov=True)
-adabound = AdaBound(lr=1e-03, final_lr=0.1, gamma=1e-03, weight_decay=0., amsbound=False)
+adabound = AdaBound(lr=1e-03, final_lr=0.1, gamma=1e-03, weight_decay=5e-4, amsbound=False)
 rms = rmsprop(lr=0.001, decay=1e-6)
-model.compile(loss=loss, optimizer=rms, metrics=['accuracy'])
+model.compile(loss=loss, optimizer=adabound, metrics=['accuracy'])
 
 """ add ImageDataGenerator """
 from keras.preprocessing.image import ImageDataGenerator
@@ -158,4 +164,4 @@ submit = pd.DataFrame(data={"ImageId": [], "Label": []})
 submit.ImageId = list(range(1, predicts.shape[0]+1))
 submit.Label = predicts
 
-submit.to_csv("../output/prot2_submit.csv", index=False)
+submit.to_csv("../output/prot4_adabound_batch_256submit.csv", index=False)

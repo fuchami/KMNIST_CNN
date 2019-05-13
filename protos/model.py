@@ -38,10 +38,10 @@ def prot1():
     return model
 
 def prot2():
-"""
-BatchNorm
-https://www.kaggle.com/kentaroyoshioka47/cnn-with-batchnormalization-in-keras-94#L71
-"""
+    """
+    BatchNorm
+    https://www.kaggle.com/kentaroyoshioka47/cnn-with-batchnormalization-in-keras-94#L71
+    """
     model = Sequential()
     #convolution 1st layer
     model.add(Conv2D(64, (3,3), padding="same",
