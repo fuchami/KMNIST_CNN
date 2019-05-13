@@ -107,6 +107,6 @@ def prot3():
     model.add(Dropout(0.4))
     
     model.add(Flatten())
-    model.add(Dense(num_classes, activation='softmax'))
+    model.add(Dense(10, activation='softmax'))
 
-    retrurn model
+    return model
