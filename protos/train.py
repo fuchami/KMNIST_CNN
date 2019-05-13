@@ -4,10 +4,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import keras
-import load
-from keras.layers import Conv2D, MaxPooling2D, Dense, GlobalAveragePooling2D
-from keras.layers import Activation, Flatten, BatchNormalization, Dropout, Input
-from keras.models import Sequential
+import load,model
 from keras.optimizers import SGD, Adam
 from keras.callbacks import EarlyStopping, LearningRateScheduler, ReduceLROnPlateau
 from keras.utils import to_categorical
@@ -88,7 +85,7 @@ print('valid_y.shape :', valid_y.shape)
 #%% Let's train!
 batch_size =128
 label_num = 10
-epochs = 1
+epochs = 100
 base_lr = 0.001
 lr_decay_rate = 1 / 3
 lr_steps = 4
@@ -101,29 +98,8 @@ learning_rate_reduction = ReduceLROnPlateau(monitor='val_acc',
 input_shape = (28, 28, 1)
 
 """ build model """
-model = Sequential()
 
-model.add(Conv2D(filters = 32, kernel_size = (3, 3), input_shape = (28, 28, 1), padding='same'))
-model.add(Activation('relu'))
-model.add(Conv2D(filters = 32, kernel_size = (3, 3)))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2,2)))
-model.add(Dropout(0.25))
-
-model.add(Conv2D(filters = 64, kernel_size = (3, 3)))
-model.add(Activation('relu'))
-model.add(Conv2D(filters = 64, kernel_size = (3, 3)))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2,2)))
-model.add(Dropout(0.25))
-
-model.add(Flatten())
-model.add(Dense(128))
-model.add(Activation('relu'))
-model.add(Dropout(0.5))
-model.add(Dense(10))
-model.add(Activation('softmax'))
-
+model = model.prot2()
 model.summary()
 
 loss = keras.losses.categorical_crossentropy
@@ -176,4 +152,4 @@ submit = pd.DataFrame(data={"ImageId": [], "Label": []})
 submit.ImageId = list(range(1, predicts.shape[0]+1))
 submit.Label = predicts
 
-submit.to_csv("../output/submit.csv", index=False)
+submit.to_csv("../output/prot2_submit.csv", index=False)
