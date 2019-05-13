@@ -5,6 +5,7 @@ import keras
 from keras.layers import Conv2D, MaxPooling2D, Dense, GlobalAveragePooling2D
 from keras.layers import Activation, Flatten, BatchNormalization, Dropout, Input
 from keras.models import Sequential
+from keras import regularizers
 
 """
 いろんなモデルを試してみる
@@ -74,3 +75,38 @@ https://www.kaggle.com/kentaroyoshioka47/cnn-with-batchnormalization-in-keras-94
     model.add(Activation('softmax'))
 
     return model
+
+def prot3():
+    weight_decay = 1e-4
+    model = Sequential()
+    model.add(Conv2D(32, (3,3), padding='same', kernel_regularizer=regularizers.l2(weight_decay), input_shape=(28,28,1)))
+    model.add(Activation('elu'))
+    model.add(BatchNormalization())
+    model.add(Conv2D(32, (3,3), padding='same', kernel_regularizer=regularizers.l2(weight_decay)))
+    model.add(Activation('elu'))
+    model.add(BatchNormalization())
+    model.add(MaxPooling2D(pool_size=(2,2)))
+    model.add(Dropout(0.2))
+    
+    model.add(Conv2D(64, (3,3), padding='same', kernel_regularizer=regularizers.l2(weight_decay)))
+    model.add(Activation('elu'))
+    model.add(BatchNormalization())
+    model.add(Conv2D(64, (3,3), padding='same', kernel_regularizer=regularizers.l2(weight_decay)))
+    model.add(Activation('elu'))
+    model.add(BatchNormalization())
+    model.add(MaxPooling2D(pool_size=(2,2)))
+    model.add(Dropout(0.3))
+    
+    model.add(Conv2D(128, (3,3), padding='same', kernel_regularizer=regularizers.l2(weight_decay)))
+    model.add(Activation('elu'))
+    model.add(BatchNormalization())
+    model.add(Conv2D(128, (3,3), padding='same', kernel_regularizer=regularizers.l2(weight_decay)))
+    model.add(Activation('elu'))
+    model.add(BatchNormalization())
+    model.add(MaxPooling2D(pool_size=(2,2)))
+    model.add(Dropout(0.4))
+    
+    model.add(Flatten())
+    model.add(Dense(num_classes, activation='softmax'))
+
+    retrurn model

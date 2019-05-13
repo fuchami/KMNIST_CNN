@@ -4,8 +4,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import keras
-import load,model
-from keras.optimizers import SGD, Adam
+import load, model
+from keras.optimizers import SGD, Adam, rmsprop
 from keras.callbacks import EarlyStopping, LearningRateScheduler, ReduceLROnPlateau
 from keras.utils import to_categorical
 from keras import backend as K
@@ -82,6 +82,13 @@ print('valid_x.shape :', valid_x.shape)
 print('train_y.shape :', train_y.shape)
 print('valid_y.shape :', valid_y.shape)
 
+""" z-score """
+mean = np.mean(train_x, axis=(0,1,2,3))
+std = np.std(train_x, axis=(0,1,2,3))
+train_x = (train_x-mean)/(std+1e-7)
+valid_x = (valid_x-mean)/(std+1e-7)
+
+
 #%% Let's train!
 batch_size =128
 label_num = 10
@@ -89,34 +96,32 @@ epochs = 100
 base_lr = 0.001
 lr_decay_rate = 1 / 3
 lr_steps = 4
-reduce_lr = LearningRateScheduler(lambda ep: float(base_lr * lr_decay_rate ** (ep * lr_steps // epochs)), verbose=1)
-learning_rate_reduction = ReduceLROnPlateau(monitor='val_acc', 
-                                            patience=3, 
-                                            verbose=1, 
-                                            factor=0.5, 
-                                            min_lr=0.00001)
+def lr_schedule(epoch):
+    lrate = 0.001
+    if epoch > 75:
+        lrate = 0.0005
+    if epoch > 100:
+        lrate = 0.0003
+    return lrate
 input_shape = (28, 28, 1)
 
 """ build model """
 
-model = model.prot2()
+model = model.prot3()
 model.summary()
 
 loss = keras.losses.categorical_crossentropy
 # optimizer = SGD(lr=base_lr, momentum=0.9, decay=1e-6, nesterov=True)
-optimizer = AdaBound(lr=1e-03,
-                final_lr=0.1,
-                gamma=1e-03,
-                weight_decay=0.,
-                amsbound=False)
-model.compile(loss=loss, optimizer=optimizer, metrics=['accuracy'])
+adabound = AdaBound(lr=1e-03, final_lr=0.1, gamma=1e-03, weight_decay=0., amsbound=False)
+rms = rmsprop(lr=0.001, decay=1e-6)
+model.compile(loss=loss, optimizer=rms, metrics=['accuracy'])
 
 """ add ImageDataGenerator """
 from keras.preprocessing.image import ImageDataGenerator
 train_gen = ImageDataGenerator(rotation_range=20,
-                                width_shift_range=0.08,
-                                height_shift_range=0.08,
-                                zoom_range=0.08)
+                                width_shift_range=0.1,
+                                height_shift_range=0.1,
+                                zoom_range=0.1)
 test_gen = ImageDataGenerator()
 
 trainig_set = train_gen.flow(train_x, train_y, batch_size=batch_size)
@@ -128,7 +133,7 @@ model.fit_generator(trainig_set,
                     validation_data= test_set,
                     validation_steps=12000//batch_size,
                     epochs=epochs,
-                    callbacks=[learning_rate_reduction])
+                    callbacks=[LearningRateScheduler(lr_schedule)])
 
 train_score = model.evaluate(train_x, train_y)
 validation_score = model.evaluate(valid_x, valid_y)
@@ -143,6 +148,7 @@ import pandas as pd
 test_x = np.load('../input/kmnist-test-imgs.npz')['arr_0']
 """ convert images """
 test_x = test_x[:, :, :, np.newaxis].astype('float32') / 255.0
+test_x = (test_x-mean)/(std+1e-7)
 print(test_x.shape)
 
 predicts = np.argmax(model.predict(test_x), axis=1)
