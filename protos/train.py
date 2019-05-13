@@ -93,7 +93,7 @@ valid_x = (valid_x-mean)/(std+1e-7)
 #%% Let's train!
 batch_size = 256
 label_num = 10
-epochs = 300
+epochs = 150
 base_lr = 0.001
 lr_decay_rate = 1 / 3
 lr_steps = 4
@@ -103,13 +103,10 @@ def lr_schedule(epoch):
         lrate = 0.0005
     if epoch > 100:
         lrate = 0.0003
-    if epoch > 150:
+    if epoch > 120:
         lrate = 0.001
-    if epoch > 200:
-        lrate = 0.0005
-    if epoch > 250:
-        lrate = 0.0001
     return lrate
+
 input_shape = (28, 28, 1)
 
 """ build model """
@@ -117,11 +114,12 @@ input_shape = (28, 28, 1)
 model = model.prot3()
 model.summary()
 
-loss = keras.losses.categorical_crossentropy
-# optimizer = SGD(lr=base_lr, momentum=0.9, decay=1e-6, nesterov=True)
+""" select optimizer """
+sgd = SGD(lr=base_lr, momentum=0.9, decay=1e-6, nesterov=True)
 adabound = AdaBound(lr=1e-03, final_lr=0.1, gamma=1e-03, weight_decay=5e-4, amsbound=False)
-
 rms = rmsprop(lr=0.001, decay=1e-4, rho=0.9, epsilon=1e-08)
+
+loss = keras.losses.categorical_crossentropy
 model.compile(loss=loss, optimizer=adabound, metrics=['accuracy'])
 
 """ add ImageDataGenerator """
@@ -168,4 +166,4 @@ submit = pd.DataFrame(data={"ImageId": [], "Label": []})
 submit.ImageId = list(range(1, predicts.shape[0]+1))
 submit.Label = predicts
 
-submit.to_csv("../output/prot6_rmps_btch64_submit.csv", index=False)
+submit.to_csv("../output/prot7_rmps_btch256_zca_RE_submit.csv", index=False)
