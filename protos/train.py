@@ -119,15 +119,17 @@ model.summary()
 loss = keras.losses.categorical_crossentropy
 # optimizer = SGD(lr=base_lr, momentum=0.9, decay=1e-6, nesterov=True)
 adabound = AdaBound(lr=1e-03, final_lr=0.1, gamma=1e-03, weight_decay=5e-4, amsbound=False)
-rms = rmsprop(lr=0.001, decay=1e-6)
+
+rms = rmsprop(lr=0.001, decay=1e-4, rho=0.9, epsilon=1e-08)
 model.compile(loss=loss, optimizer=adabound, metrics=['accuracy'])
 
 """ add ImageDataGenerator """
 from keras.preprocessing.image import ImageDataGenerator
-train_gen = ImageDataGenerator(rotation_range=20,
+train_gen = ImageDataGenerator(rotation_range=10,
                                 width_shift_range=0.1,
                                 height_shift_range=0.1,
-                                zoom_range=0.1)
+                                zoom_range=0.1,
+                                zca_whitening=True)
 test_gen = ImageDataGenerator()
 
 trainig_set = train_gen.flow(train_x, train_y, batch_size=batch_size)
@@ -164,4 +166,4 @@ submit = pd.DataFrame(data={"ImageId": [], "Label": []})
 submit.ImageId = list(range(1, predicts.shape[0]+1))
 submit.Label = predicts
 
-submit.to_csv("../output/prot4_adabound_batch_256submit.csv", index=False)
+submit.to_csv("../output/prot6_rmps_btch64_submit.csv", index=False)
