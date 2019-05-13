@@ -92,7 +92,7 @@ valid_x = (valid_x-mean)/(std+1e-7)
 #%% Let's train!
 batch_size =128
 label_num = 10
-epochs = 100
+epochs = 300
 base_lr = 0.001
 lr_decay_rate = 1 / 3
 lr_steps = 4
