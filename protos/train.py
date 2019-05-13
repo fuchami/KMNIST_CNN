@@ -111,7 +111,7 @@ input_shape = (28, 28, 1)
 
 """ build model """
 
-model = model.prot3()
+model = model.resnet()
 model.summary()
 
 """ select optimizer """
@@ -120,7 +120,7 @@ adabound = AdaBound(lr=1e-03, final_lr=0.1, gamma=1e-03, weight_decay=5e-4, amsb
 rms = rmsprop(lr=0.001, decay=1e-4, rho=0.9, epsilon=1e-08)
 
 loss = keras.losses.categorical_crossentropy
-model.compile(loss=loss, optimizer=adabound, metrics=['accuracy'])
+model.compile(loss=loss, optimizer=rms, metrics=['accuracy'])
 
 """ add ImageDataGenerator """
 from keras.preprocessing.image import ImageDataGenerator
@@ -128,7 +128,6 @@ train_gen = ImageDataGenerator(rotation_range=10,
                                 width_shift_range=0.1,
                                 height_shift_range=0.1,
                                 zoom_range=0.1,
-                                zca_whitening=True,
                                 preprocessing_function=get_random_eraser(v_l=0, v_h=1, pixel_level=False))
 test_gen = ImageDataGenerator()
 
@@ -166,4 +165,4 @@ submit = pd.DataFrame(data={"ImageId": [], "Label": []})
 submit.ImageId = list(range(1, predicts.shape[0]+1))
 submit.Label = predicts
 
-submit.to_csv("../output/prot7_rmps_btch256_zca_RE_submit.csv", index=False)
+submit.to_csv("../output/resnet_rmps_btch256_RE_submit.csv", index=False)
