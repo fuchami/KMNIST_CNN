@@ -10,6 +10,7 @@ from keras.callbacks import EarlyStopping, LearningRateScheduler, ReduceLROnPlat
 from keras.utils import to_categorical
 from keras import backend as K
 from adabound import AdaBound
+from random_eraser import get_random_eraser
 #%matplotlib inline
 
 #%% load kmnist dataset
@@ -129,7 +130,8 @@ train_gen = ImageDataGenerator(rotation_range=10,
                                 width_shift_range=0.1,
                                 height_shift_range=0.1,
                                 zoom_range=0.1,
-                                zca_whitening=True)
+                                zca_whitening=True,
+                                preprocessing_function=get_random_eraser(v_l=0, v_h=1, pixel_level=False))
 test_gen = ImageDataGenerator()
 
 trainig_set = train_gen.flow(train_x, train_y, batch_size=batch_size)
