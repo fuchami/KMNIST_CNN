@@ -4,7 +4,7 @@ import os, sys
 import subprocess
 
 def main():
-    cnn_model = ['prot3', 'resnet', 'prot2']
+    cnn_model = ['prot3','wrn_net','resnet', 'prot2']
     opt = ['adaboud','sgd','rmsprop']
     z_score = ['True', 'False']
     batchsize = ['256', '128', '64', '512']

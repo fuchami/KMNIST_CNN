@@ -125,10 +125,12 @@ def main(args):
     """ build model """
     if args.model == 'prot3':
         select_model = model.prot3()
+    elif args.model == 'prot2':
+        select_model = model.prot2()
     elif args.model == 'resnet':
         select_model = model.resnet()
-    elif args.model == 'wrn':
-        select_model = model.wrn()
+    elif args.model == 'wrn_net':
+        select_model = model.wrn_net()
     else:
         raise SyntaxError("please select model: prot3 resnet wrn")
 
@@ -210,7 +212,7 @@ def main(args):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='train CNN model for classify')
-    parser.add_argument('--epochs', '-e', type=int, default=200)
+    parser.add_argument('--epochs', '-e', type=int, default=300)
     parser.add_argument('--imgsize', '-s', type=int, default=28)
     parser.add_argument('--batchsize', '-b', type=int, default=64)
     parser.add_argument('--aug_mode', '-a', default='non',

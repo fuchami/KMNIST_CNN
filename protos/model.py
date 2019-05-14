@@ -11,6 +11,16 @@ from keras.layers import AveragePooling2D, Input
 from keras.models import Sequential, Model
 from keras import regularizers
 from keras.regularizers import l2
+from keras import backend as K
+
+from funcy import concat, identity, juxt, partial, rcompose, repeat, repeatedly, take
+import wrn
+
+
+def wrn_net():
+    model = Model(*juxt(identity, wrn.computational_graph(10))(Input(shape=(28,28,1))))
+
+    return model
 
 def prot1():
     """ with dropout """
@@ -70,7 +80,7 @@ def prot2():
     model.add(Dense(500,use_bias=False))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(Dropout(droprate))
+    model.add(Dropout(0.25))
 
     #Fully connected final layer
     model.add(Dense(10))

@@ -1,6 +1,11 @@
 .DS_Store
 
 /input/
+/output/
+/train_log/
+/cutout-random-erasing/
+/keras-adabound/
+/Wide-Residual-Networks/
 *.npz
 *.pyc
 *.csv
