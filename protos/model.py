@@ -109,11 +109,6 @@ def prot3():
     model.add(Dropout(0.4))
     
     model.add(Flatten())
-    
-    model.add(Dense(256,use_bias=False))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    model.add(Dropout(0.5))
 
     model.add(Dense(10, activation='softmax'))
 
