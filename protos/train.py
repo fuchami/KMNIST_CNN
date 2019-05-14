@@ -119,20 +119,20 @@ def main(args):
         if epoch > 100:
             lrate = 0.0003
         if epoch > 120:
-            lrate = 0.001
+            lrate = 0.0001
         return lrate
 
     """ build model """
     if args.model == 'prot3':
-        model = model.prot3()
+        select_model = model.prot3()
     elif args.model == 'resnet':
-        model = model.resnet()
+        select_model = model.resnet()
     elif args.model == 'wrn':
-        model = model.wrn()
+        select_model = model.wrn()
     else:
         raise SyntaxError("please select model: prot3 resnet wrn")
 
-    model.summary()
+    select_model.summary()
 
     """ select optimizer """
     if args.opt == 'sgd':
@@ -145,10 +145,10 @@ def main(args):
         callbacks.append(LearningRateScheduler(lr_schedule))
     elif args.opt == 'adabound':
         print('--- optimizer: adabound ---')
-        adabound = AdaBound(lr=1e-03, final_lr=0.1, gamma=1e-03, weight_decay=5e-4, amsbound=False)
+        opt = AdaBound(lr=0.001, final_lr=0.1, gamma=0.001, weight_decay=5e-4, amsbound=False)
 
     loss = keras.losses.categorical_crossentropy
-    model.compile(loss=loss, optimizer=opt, metrics=['accuracy'])
+    select_model.compile(loss=loss, optimizer=opt, metrics=['accuracy'])
 
     """ add ImageDataGenerator """
     from keras.preprocessing.image import ImageDataGenerator
@@ -156,14 +156,16 @@ def main(args):
                                     width_shift_range=0.1,
                                     height_shift_range=0.1,
                                     zoom_range=0.1,
-                                    preprocessing_function=get_random_eraser(v_l=0, v_h=1, pixel_level=False))
+                                    preprocessing_function=get_random_eraser(
+                                                    p=0.5, s_l=0.02, s_h=0.4, r_1=0.3, r_2=1/0.3,
+                                                    v_l=0, v_h=255, pixel_level=False))
     test_gen = ImageDataGenerator()
 
     trainig_set = train_gen.flow(train_x, train_y, batch_size=batch_size)
     test_set = train_gen.flow(valid_x, valid_y, batch_size=batch_size)
 
     """ model train """
-    model.fit_generator(trainig_set,
+    select_model.fit_generator(trainig_set,
                         steps_per_epoch = 48000//batch_size,
                         validation_data= test_set,
                         validation_steps=12000//batch_size,
@@ -171,8 +173,8 @@ def main(args):
                         callbacks=callbacks)
 
     """ evaluate model """
-    train_score = model.evaluate(train_x, train_y)
-    validation_score = model.evaluate(valid_x, valid_y)
+    train_score = select_model.evaluate(train_x, train_y)
+    validation_score = select_model.evaluate(valid_x, valid_y)
 
     print('Train loss :', train_score[0])
     print('Train accuracy :', train_score[1])
@@ -196,7 +198,7 @@ def main(args):
         test_x = (test_x-mean)/(std+1e-7)
     print(test_x.shape)
 
-    predicts = np.argmax(model.predict(test_x), axis=1)
+    predicts = np.argmax(select_model.predict(test_x), axis=1)
 
     submit = pd.DataFrame(data={"ImageId": [], "Label": []})
 
