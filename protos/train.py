@@ -7,7 +7,7 @@ import h5py
 import numpy as np
 import matplotlib.pyplot as plt
 import keras
-import load, model, tools
+import load, model, tools, myopt
 from keras.optimizers import SGD, Adam, rmsprop
 from keras.callbacks import EarlyStopping, LearningRateScheduler, ReduceLROnPlateau, CSVLogger
 from keras import backend as K
@@ -75,14 +75,16 @@ def main(args):
         raise SyntaxError("please select model")
     select_model.summary()
 
+
     """ select optimizer """
     if args.opt == 'sgd':
         print('--- optimizer: SGD ---')
         opt = SGD(lr=base_lr, momentum=0.9, decay=1e-6, nesterov=True)
         callbacks.append(LearningRateScheduler(lr_schedule))
     elif args.opt == 'rms':
-        print('--- optimizer: rmsprop ---')
-        opt = rmsprop(lr=0.001, decay=1e-4, rho=0.9, epsilon=1e-08)
+        print('--- optimizer: RMSpropGraves ---')
+        # opt = rmsprop(lr=0.001, decay=1e-6, rho=0.9, epsilon=1e-08)
+        opt = myopt.RMSpropGraves(decay=1e-6)
         callbacks.append(LearningRateScheduler(lr_schedule))
     elif args.opt == 'adabound':
         print('--- optimizer: adabound ---')
