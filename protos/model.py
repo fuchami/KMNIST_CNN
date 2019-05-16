@@ -127,7 +127,7 @@ def prot3():
 
     return model
 
-def resnet()
+def resnet():
     num_classes = 10
     num_filters = 64
     num_blocks = 4
