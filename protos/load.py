@@ -13,7 +13,7 @@ class KMNISTDataLoader(object):
     >>> datapath = "./input/"
     >>> train_imgs, train_lbls, validation_imgs, train_lbls = kmist_dl.load(datapath)
     """
-    def __init__(self, validation_size: float=0.2):
+    def __init__(self, validation_size: float=0.15):
         self._basename_list = [ 'kmnist-train-imgs.npz', 'kmnist-train-labels.npz']
         self.validation_size = validation_size
     
@@ -189,6 +189,11 @@ class MyImageDataGenerator(ImageDataGenerator):
             yield(batch_x, batch_y)
 
 def mygenerator(args, train_x, train_y, valid_x, valid_y, label_num):
+
+    print('train_x.shape :', train_x.shape)
+    print('valid_x.shape :', valid_x.shape)
+    print('train_y.shape :', train_y.shape)
+    print('valid_y.shape :', valid_y.shape)
 
     train_datagen = MyImageDataGenerator(shear_range=0.1,
                                             zoom_range=0.1,

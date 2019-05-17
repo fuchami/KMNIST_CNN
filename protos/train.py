@@ -83,8 +83,8 @@ def main(args):
         callbacks.append(LearningRateScheduler(lr_schedule))
     elif args.opt == 'rms':
         print('--- optimizer: RMSpropGraves ---')
-        # opt = rmsprop(lr=0.001, decay=1e-6, rho=0.9, epsilon=1e-08)
-        opt = myopt.RMSpropGraves(decay=1e-6)
+        opt = rmsprop(lr=0.001, decay=1e-6, rho=0.9, epsilon=1e-08)
+        # opt = myopt.RMSpropGraves(decay=1e-6)
         callbacks.append(LearningRateScheduler(lr_schedule))
     elif args.opt == 'adabound':
         print('--- optimizer: adabound ---')
@@ -97,9 +97,9 @@ def main(args):
 
     """ model train """
     history = select_model.fit_generator(train_generator,
-                        steps_per_epoch = 48000//args.batchsize,
+                        steps_per_epoch = 51000//args.batchsize,
                         validation_data= valid_generator,
-                        validation_steps=12000//args.batchsize,
+                        validation_steps=9000//args.batchsize,
                         epochs=args.epochs,
                         callbacks=callbacks)
     """ plot learning history """
@@ -115,7 +115,7 @@ def main(args):
     print('validation accuracy :', validation_score[1])
 
     """ logging score """
-    with open('./train_log/log.csv', 'a') as f:
+    with open('../train_log/log.csv', 'a') as f:
         data = [para_str, train_score[1], train_score[0], validation_score[1], validation_score[0]]
         writer = csv.writer(f)
         writer.writerow(data)
