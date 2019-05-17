@@ -58,6 +58,8 @@ def main(args):
             lrate = 0.0005
         if epoch > 100:
             lrate = 0.0003
+        if epoch > 150:
+            lrate = 0.0001
         return lrate
 
     """ build model """
@@ -104,7 +106,7 @@ def main(args):
                         epochs=args.epochs,
                         callbacks=callbacks)
     """ plot learning history """
-    # tools.plot_history(history, para_str, para_path)
+    tools.plot_history(history, para_str, para_path)
 
     """ evaluate model """
     train_score = select_model.evaluate(train_x, train_y)
@@ -126,16 +128,13 @@ def main(args):
     test_x = np.load('../input/kmnist-test-imgs.npz')['arr_0']
     """ convert images """
     test_x = test_x[:, :, :, np.newaxis].astype('float32') / 255.0
-
     """ z-score """
     if args.zscore == "True":
         test_x = (test_x-mean)/(std+1e-7)
-    print(test_x.shape)
+    # print(test_x.shape)
 
     predicts = np.argmax(select_model.predict(test_x), axis=1)
-
     submit = pd.DataFrame(data={"ImageId": [], "Label": []})
-
     submit.ImageId = list(range(1, predicts.shape[0]+1))
     submit.Label = predicts
 
@@ -150,7 +149,7 @@ if __name__ == "__main__":
     parser.add_argument('--aug_mode', '-a', default='non',
                         help='aug1 aug2 Random erasing')
     parser.add_argument('--model', '-m', default='prot3',
-                        help='prot3/resnet/Wide-Res')
+                        help='prot3/resnet/wrn_net')
     parser.add_argument('--opt', '-o', default='rmsgraves',
                         help='sgd rms adabound')
     parser.add_argument('--zscore', '-z', default='True',

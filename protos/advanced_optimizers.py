@@ -1,7 +1,6 @@
 from keras import backend as K
 from keras.optimizers import Optimizer
 
-
 class RMSpropGraves(Optimizer):
     """RMSPropGraves optimizer.
     It is recommended to leave the parameters of this optimizer
