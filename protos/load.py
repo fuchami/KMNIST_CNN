@@ -195,11 +195,11 @@ def mygenerator(args, train_x, train_y, valid_x, valid_y, label_num):
     print('train_y.shape :', train_y.shape)
     print('valid_y.shape :', valid_y.shape)
 
-    train_datagen = MyImageDataGenerator(shear_range=0.1,
+    train_datagen = MyImageDataGenerator(shear_range=0.2,
                                             zoom_range=0.1,
                                             width_shift_range=0.1,
                                             height_shift_range=0.1,
-                                            rotation_range=15,
+                                            rotation_range=20,
                                             # mix_up_alpha=0.2,
                                             random_erasing=True)
     
