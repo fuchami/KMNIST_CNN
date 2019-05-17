@@ -2,6 +2,69 @@ from keras import backend as K
 from keras.optimizers import Optimizer
 
 
+class RMSpropGraves(Optimizer):
+    """RMSPropGraves optimizer.
+    It is recommended to leave the parameters of this optimizer
+    at their default values
+    (except the learning rate, which can be freely tuned).
+    This optimizer is usually a good choice for recurrent
+    neural networks.
+    # Arguments
+        lr: float >= 0. Learning rate.
+        rho: float >= 0.
+        epsilon: float >= 0. Fuzz factor.
+        decay: float >= 0. Learning rate decay over each update.
+    # References
+        - [rmsprop: Divide the gradient by a running average of its recent magnitude](http://www.cs.toronto.edu/~tijmen/csc321/slides/lecture_slides_lec6.pdf)
+    """
+
+    def __init__(self, lr=0.001, rho=0.9, momentum=0.9, epsilon=1e-8, decay=0.,
+                 **kwargs):
+        super(RMSpropGraves, self).__init__(**kwargs)
+        self.lr = K.variable(lr)
+        self.rho = K.variable(rho)
+        self.epsilon = epsilon
+        self.momentum = K.variable(momentum)
+        self.decay = K.variable(decay)
+        self.initial_decay = decay
+        self.iterations = K.variable(0.)
+
+    def get_updates(self, params, loss):
+        grads = self.get_gradients(loss, params)
+        shapes = [K.get_variable_shape(p) for p in params]
+        accumulators = [K.zeros(shape) for shape in shapes]
+        gs = [K.zeros(shape) for shape in shapes]
+        moms = [K.zeros(shape) for shape in shapes] 
+        self.weights = accumulators
+        self.updates = []
+
+        lr = self.lr
+        if self.initial_decay > 0:
+            lr *= (1. / (1. + self.decay * self.iterations))
+            self.updates.append(K.update_add(self.iterations, 1))
+
+        for p, grad, g, mom, a in zip(params, grads, gs, moms, accumulators):
+            # update accumulator
+            new_a = self.rho * a + (1. - self.rho) * K.square(grad)
+            self.updates.append(K.update(a, new_a))
+            new_g = self.rho * g + (1 - self.rho) * grad
+            self.updates.append(K.update(g, new_g))
+            #new_p = p - lr * grad / K.sqrt(new_a - K.square(new_g) +  self.epsilon)
+            new_mom = self.momentum * mom - lr * grad / K.sqrt(new_a - K.square(new_g) +  self.epsilon)
+            new_p = p + new_mom
+            #new_p = p - lr * grad / (K.sqrt(new_a) + self.epsilon)
+
+            self.updates.append(K.update(p, new_p))
+        return self.updates
+
+    def get_config(self):
+        config = {'lr': float(K.get_value(self.lr)),
+                  'rho': float(K.get_value(self.rho)),
+                  'decay': float(K.get_value(self.decay)),
+                  'epsilon': self.epsilon}
+        base_config = super(RMSpropGraves, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
+
 class AdaBound(Optimizer):
     """AdaBound optimizer.
 

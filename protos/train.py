@@ -11,7 +11,7 @@ import load, model, tools, myopt
 from keras.optimizers import SGD, Adam, rmsprop
 from keras.callbacks import EarlyStopping, LearningRateScheduler, ReduceLROnPlateau, CSVLogger
 from keras import backend as K
-from adabound import AdaBound
+from advanced_optimizers import AdaBound, RMSpropGraves
 
 def main(args):
 
@@ -81,8 +81,8 @@ def main(args):
         callbacks.append(LearningRateScheduler(lr_schedule))
     elif args.opt == 'rms':
         print('--- optimizer: RMSpropGraves ---')
-        opt = rmsprop(lr=0.001, decay=1e-6)
-        # opt = myopt.RMSpropGraves(decay=1e-6)
+        # opt = rmsprop(lr=0.001, decay=1e-6)
+        opt = RMSpropGraves(lr=0.001, decay=1e-6)
         callbacks.append(LearningRateScheduler(lr_schedule))
     elif args.opt == 'adabound':
         print('--- optimizer: adabound ---')

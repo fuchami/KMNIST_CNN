@@ -92,7 +92,7 @@ def prot3():
     """
     https://appliedmachinelearning.blog/2018/03/24/achieving-90-accuracy-in-object-recognition-task-on-cifar-10-dataset-with-keras-convolutional-neural-networks/
     """
-    weight_decay = 1e-6
+    weight_decay = 1e-4
     model = Sequential()
     model.add(Conv2D(32, (3,3), padding='same', kernel_regularizer=regularizers.l2(weight_decay), input_shape=(28,28,1)))
     model.add(Activation('elu'))
