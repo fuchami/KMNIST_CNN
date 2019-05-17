@@ -58,8 +58,6 @@ def main(args):
             lrate = 0.0005
         if epoch > 100:
             lrate = 0.0003
-        if epoch > 120:
-            lrate = 0.0001
         return lrate
 
     """ build model """
@@ -83,7 +81,7 @@ def main(args):
         callbacks.append(LearningRateScheduler(lr_schedule))
     elif args.opt == 'rms':
         print('--- optimizer: RMSpropGraves ---')
-        opt = rmsprop(lr=0.001, decay=1e-6, rho=0.9, epsilon=1e-08)
+        opt = rmsprop(lr=0.001, decay=1e-6)
         # opt = myopt.RMSpropGraves(decay=1e-6)
         callbacks.append(LearningRateScheduler(lr_schedule))
     elif args.opt == 'adabound':
@@ -103,7 +101,7 @@ def main(args):
                         epochs=args.epochs,
                         callbacks=callbacks)
     """ plot learning history """
-    tools.plot_history(history, para_str, para_path)
+    # tools.plot_history(history, para_str, para_path)
 
     """ evaluate model """
     train_score = select_model.evaluate(train_x, train_y)

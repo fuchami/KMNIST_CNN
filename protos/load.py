@@ -199,8 +199,8 @@ def mygenerator(args, train_x, train_y, valid_x, valid_y, label_num):
                                             zoom_range=0.1,
                                             width_shift_range=0.1,
                                             height_shift_range=0.1,
-                                            rotation_range=20,
-                                            mix_up_alpha=0.2,
+                                            rotation_range=15,
+                                            # mix_up_alpha=0.2,
                                             random_erasing=True)
     
     valid_datagen = ImageDataGenerator()
