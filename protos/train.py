@@ -80,8 +80,11 @@ def main(args):
         opt = SGD(lr=base_lr, momentum=0.9, decay=1e-6, nesterov=True)
         callbacks.append(LearningRateScheduler(lr_schedule))
     elif args.opt == 'rms':
+        print('--- optimizer: RMSprop ---')
+        opt = rmsprop(lr=0.001, decay=1e-6)
+        callbacks.append(LearningRateScheduler(lr_schedule))
+    elif args.opt == 'rmsgraves':
         print('--- optimizer: RMSpropGraves ---')
-        # opt = rmsprop(lr=0.001, decay=1e-6)
         opt = RMSpropGraves(lr=0.001, decay=1e-6)
         callbacks.append(LearningRateScheduler(lr_schedule))
     elif args.opt == 'adabound':
@@ -148,7 +151,7 @@ if __name__ == "__main__":
                         help='aug1 aug2 Random erasing')
     parser.add_argument('--model', '-m', default='prot3',
                         help='prot3/resnet/Wide-Res')
-    parser.add_argument('--opt', '-o', default='adabound',
+    parser.add_argument('--opt', '-o', default='rmsgraves',
                         help='sgd rms adabound')
     parser.add_argument('--zscore', '-z', default='True',
                         help='true false')
