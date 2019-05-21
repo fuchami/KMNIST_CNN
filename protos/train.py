@@ -100,13 +100,13 @@ def main(args):
 
     """ model train """
     history = select_model.fit_generator(train_generator,
-                        steps_per_epoch = 51000//args.batchsize,
+                        steps_per_epoch = 60000//args.batchsize,
                         validation_data= valid_generator,
-                        validation_steps=9000//args.batchsize,
+                        validation_steps=0//args.batchsize,
                         epochs=args.epochs,
                         callbacks=callbacks)
     """ plot learning history """
-    tools.plot_history(history, para_str, para_path)
+    # tools.plot_history(history, para_str, para_path)
 
     """ evaluate model """
     train_score = select_model.evaluate(train_x, train_y)
@@ -150,7 +150,7 @@ if __name__ == "__main__":
                         help='aug1 aug2 Random erasing')
     parser.add_argument('--model', '-m', default='prot3',
                         help='prot3/resnet/wrn_net')
-    parser.add_argument('--opt', '-o', default='rmsgraves',
+    parser.add_argument('--opt', '-o', default='rms',
                         help='sgd rms adabound')
     parser.add_argument('--zscore', '-z', default='True',
                         help='true false')
