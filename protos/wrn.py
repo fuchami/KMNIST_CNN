@@ -72,8 +72,8 @@ def computational_graph(class_size):
     # WRN-28-10の場合、N = 4、k = 10
     # WRN-40-4の場合、N = 6、k = 4
 
-    k = 4  # 論文によれば、CIFAR-10に最適な値は10。
-    n = 6  # 論文によれば、CIFAR-10に最適な値は4。WRN-28-10の28はconvの数で、「1（入り口のconv）+ 3 * n * 2 + 3（ショートカットの中のconv？）」みたい。n = 4 で28。
+    k = 8  # 論文によれば、CIFAR-10に最適な値は10。
+    n = 2  # 論文によれば、CIFAR-10に最適な値は4。WRN-28-10の28はconvの数で、「1（入り口のconv）+ 3 * n * 2 + 3（ショートカットの中のconv？）」みたい。n = 4 で28。
 
     return rcompose(conv(16, 3),
                     residual_block(16 * k, 1, n),

@@ -7,7 +7,7 @@ import h5py
 import numpy as np
 import matplotlib.pyplot as plt
 import keras
-import load, model, tools, myopt
+import load, model, tools
 from keras.optimizers import SGD, Adam, rmsprop
 from keras.callbacks import EarlyStopping, LearningRateScheduler, ReduceLROnPlateau, CSVLogger
 from keras import backend as K
