@@ -91,9 +91,9 @@ def main(args):
 
     """ model train """
     history = select_model.fit_generator(train_generator,
-                        steps_per_epoch = 60000//args.batchsize,
+                        steps_per_epoch = 51000//args.batchsize,
                         validation_data= valid_generator,
-                        validation_steps=0//args.batchsize,
+                        validation_steps=9000//args.batchsize,
                         epochs=args.epochs,
                         callbacks=callbacks)
     """ plot learning history """
@@ -123,10 +123,9 @@ def main(args):
     test_x = (test_x-mean)/(std+1e-7)
 
     """ tta """
+    predicts = np.argmax(tools.tta(select_model, test_x, args.batchsize), axis=1)
 
-    predicts = np.argmax(tools.tta(select_model, test_x, args.batchsize))
-
-    print(predicts.shape) # shape(10000, )
+    print('predicts.shape: ', predicts.shape) # hope shape(10000, )
     submit = pd.DataFrame(data={"ImageId": [], "Label": []})
     submit.ImageId = list(range(1, predicts.shape[0]+1))
     submit.Label = predicts

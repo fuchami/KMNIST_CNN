@@ -3,6 +3,7 @@
 
 import os
 import numpy as np
+import tensorflow as tf
 from keras.preprocessing.image import ImageDataGenerator
 from keras.utils import to_categorical
 
@@ -13,7 +14,7 @@ class KMNISTDataLoader(object):
     >>> datapath = "./input/"
     >>> train_imgs, train_lbls, validation_imgs, train_lbls = kmist_dl.load(datapath)
     """
-    def __init__(self, validation_size: float=0):
+    def __init__(self, validation_size: float=0.15):
         self._basename_list = [ 'kmnist-train-imgs.npz', 'kmnist-train-labels.npz']
         self.validation_size = validation_size
     
