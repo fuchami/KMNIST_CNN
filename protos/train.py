@@ -30,7 +30,7 @@ def main(args):
             writer.writerow(header)
 
     """ dataset load """
-    kmnist_dl = load.KMNISTDataLoader()
+    kmnist_dl = load.KMNISTDataLoader(img_resize=args.imgsize)
     train_x, train_y, valid_x, valid_y = kmnist_dl.load('../input/')
     train_x, train_y, valid_x, valid_y = load.Preprocessor().transform(train_x, train_y, valid_x, valid_y)
 
@@ -60,7 +60,7 @@ def main(args):
 
     """ build model """
     if args.model == 'prot3':
-        select_model = model.prot3()
+        select_model = model.prot3(args)
     elif args.model == 'wrn_net':
         select_model = model.wrn_net()
     else:
@@ -122,7 +122,7 @@ def main(args):
     """ z-score """
     test_x = (test_x-mean)/(std+1e-7)
 
-    """ tta """
+    print('--- predict test data ---')
     predicts = np.argmax(tools.tta(select_model, test_x, args.batchsize), axis=1)
 
     print('predicts.shape: ', predicts.shape) # hope shape(10000, )
@@ -136,7 +136,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='train CNN model for classify')
     parser.add_argument('--epochs', '-e', type=int, default=100)
-    parser.add_argument('--imgsize', '-s', type=int, default=28)
+    parser.add_argument('--imgsize', '-s', type=int, default=56)
     parser.add_argument('--batchsize', '-b', type=int, default=128)
     parser.add_argument('--aug_mode', '-a', default='non',
                         help='aug1 aug2 Random erasing')

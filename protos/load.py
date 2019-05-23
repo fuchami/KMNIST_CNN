@@ -3,7 +3,7 @@
 
 import os
 import numpy as np
-import tensorflow as tf
+import cv2
 from keras.preprocessing.image import ImageDataGenerator
 from keras.utils import to_categorical
 
@@ -14,15 +14,30 @@ class KMNISTDataLoader(object):
     >>> datapath = "./input/"
     >>> train_imgs, train_lbls, validation_imgs, train_lbls = kmist_dl.load(datapath)
     """
-    def __init__(self, validation_size: float=0.15):
+    def __init__(self, validation_size: float=0.15, img_resize=56):
         self._basename_list = [ 'kmnist-train-imgs.npz', 'kmnist-train-labels.npz']
         self.validation_size = validation_size
+        self.img_resize = img_resize
+    
+    def resize(self, imgs):
+        resized_imgs = []
+        for im in imgs:
+            resized_img = cv2.resize(im, (self.img_resize, self.img_resize))
+            resized_imgs.append(resized_img)
+        resized_imgs = np.array(resized_imgs)
+        return resized_imgs
     
     def load(self, datapath: str, random_seed: int=13) -> np.ndarray:
         filename_list = self._make_filenames(datapath)
 
         data_list = [np.load(filename)['arr_0'] for filename in filename_list]
         all_imgs, all_lbls = data_list
+
+        print('all_imgs.shape: ', all_imgs.shape)
+        print('all_imgs type', type(all_imgs))
+        all_imgs = self.resize(all_imgs)
+        print('all_imgs.shape: ', all_imgs.shape)
+        print('all_imgs type', type(all_imgs))
 
         # shuffle data
         np.random.seed(random_seed)
@@ -68,7 +83,7 @@ class MyImageDataGenerator(ImageDataGenerator):
                 height_shift_range=0.0, brightness_range=None, shear_range=0.0, zoom_range=0.0,
                 channel_shift_range=0.0, fill_mode='nearest', cval=0.0, horizontal_flip=False,
                 vertical_flip=False, rescale=None, preprocessing_function=None, data_format=None, 
-                validation_split=0.0, random_crop=None, mix_up_alpha=0.0, random_erasing=False):
+                validation_split=0.0, random_crop=None, mix_up_alpha=0.0, random_erasing=False, img_resize=56):
 
         # 親クラスのコンストラクタ
         super().__init__(featurewise_center, samplewise_center, featurewise_std_normalization,
