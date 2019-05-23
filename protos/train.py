@@ -1,6 +1,5 @@
 #coding:utf-8
 
-#%%
 import os, sys, argparse, csv
 import h5py
 
@@ -20,10 +19,10 @@ def main(args):
         args.model, args.batchsize, args.opt, args.zscore)
     print("start this params CNN train: ", para_str)
     para_path = '../train_log/' + para_str
-    """ 単一モデル用のログ """
+    """ model logging """
     if not os.path.exists( para_path + '/'):
         os.makedirs( para_path + '/')
-    """ 比較用の統括ログ """
+    """ total model logging for compare """
     if not os.path.exists('../train_log/log.csv'):
         with open('../train_log/log.csv', 'w')as f:
             writer = csv.writer(f)
@@ -32,17 +31,14 @@ def main(args):
 
     """ dataset load """
     kmnist_dl = load.KMNISTDataLoader()
-    datapath = '../input'
-    train_x, train_y, valid_x, valid_y = kmnist_dl.load(datapath)
+    train_x, train_y, valid_x, valid_y = kmnist_dl.load('../input/')
     train_x, train_y, valid_x, valid_y = load.Preprocessor().transform(train_x, train_y, valid_x, valid_y)
 
     """ z-score """
-    if args.zscore == "True":
-        print('--- z-score True ---')
-        mean = np.mean(train_x, axis=(0,1,2,3))
-        std = np.std(train_x, axis=(0,1,2,3))
-        train_x = (train_x-mean)/(std+1e-7)
-        valid_x = (valid_x-mean)/(std+1e-7)
+    mean = np.mean(train_x, axis=(0,1,2,3))
+    std = np.std(train_x, axis=(0,1,2,3))
+    train_x = (train_x-mean)/(std+1e-7)
+    valid_x = (valid_x-mean)/(std+1e-7)
 
     """ define hyper parameters """
     label_num = 10
@@ -65,16 +61,11 @@ def main(args):
     """ build model """
     if args.model == 'prot3':
         select_model = model.prot3()
-    elif args.model == 'prot2':
-        select_model = model.prot2()
-    elif args.model == 'resnet':
-        select_model = model.resnet()
     elif args.model == 'wrn_net':
         select_model = model.wrn_net()
     else:
         raise SyntaxError("please select model")
     select_model.summary()
-
 
     """ select optimizer """
     if args.opt == 'sgd':
@@ -129,11 +120,13 @@ def main(args):
     """ convert images """
     test_x = test_x[:, :, :, np.newaxis].astype('float32') / 255.0
     """ z-score """
-    if args.zscore == "True":
-        test_x = (test_x-mean)/(std+1e-7)
-    # print(test_x.shape)
+    test_x = (test_x-mean)/(std+1e-7)
 
-    predicts = np.argmax(select_model.predict(test_x), axis=1)
+    """ tta """
+
+    predicts = np.argmax(tools.tta(select_model, test_x, args.batchsize))
+
+    print(predicts.shape) # shape(10000, )
     submit = pd.DataFrame(data={"ImageId": [], "Label": []})
     submit.ImageId = list(range(1, predicts.shape[0]+1))
     submit.Label = predicts
