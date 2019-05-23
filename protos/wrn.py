@@ -18,9 +18,15 @@ from keras.utils               import plot_model
 from operator                  import getitem
 
 
-def computational_graph(class_size):
-    # Utility functions.
+def computational_graph(class_size,n=4, k=10):
+    # WRN-16-8の場合、N = 2、k = 8
+    # WRN-28-10の場合、N = 4、k = 10
+    # WRN-40-4の場合、N = 6、k = 4
 
+    # 論文によれば、CIFAR-10に最適な値は10。
+    # 論文によれば、CIFAR-10に最適な値は4。WRN-28-10の28はconvの数で、「1（入り口のconv）+ 3 * n * 2 + 3（ショートカットの中のconv？）」みたい。n = 4 で28。
+
+    # Utility functions.
     def ljuxt(*fs):  # Kerasはジェネレーターを引数に取るのを嫌がるみたい、かつ、funcyはPython3だと積極的にジェネレーターを使うみたいなので、リストを返すjuxtを作りました。
         return rcompose(juxt(*fs), list)
 
@@ -68,12 +74,6 @@ def computational_graph(class_size):
         return rcompose(first_residual_unit(filter_size, stride_size),
                         rcompose(*repeatedly(partial(residual_unit, filter_size), unit_size - 1)))
     
-    # WRN-16-8の場合、N = 2、k = 8
-    # WRN-28-10の場合、N = 4、k = 10
-    # WRN-40-4の場合、N = 6、k = 4
-
-    k = 8  # 論文によれば、CIFAR-10に最適な値は10。
-    n = 2  # 論文によれば、CIFAR-10に最適な値は4。WRN-28-10の28はconvの数で、「1（入り口のconv）+ 3 * n * 2 + 3（ショートカットの中のconv？）」みたい。n = 4 で28。
 
     return rcompose(conv(16, 3),
                     residual_block(16 * k, 1, n),

@@ -17,8 +17,8 @@ from funcy import concat, identity, juxt, partial, rcompose, repeat, repeatedly,
 import wrn
 
 
-def wrn_net():
-    model = Model(*juxt(identity, wrn.computational_graph(10))(Input(shape=(28,28,1))))
+def wrn_net(imgsize):
+    model = Model(*juxt(identity, wrn.computational_graph(10))(Input(shape=(imgsize,imgsize,1))))
 
     return model
 

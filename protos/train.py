@@ -5,6 +5,7 @@ import h5py
 
 import numpy as np
 import matplotlib.pyplot as plt
+import cv2
 import keras
 import load, model, tools
 from keras.optimizers import SGD, Adam, rmsprop
@@ -16,8 +17,8 @@ from swa import SWA
 def main(args):
 
     """ log params """
-    para_str = '{}_batchsize{}_{}_zscore{}'.format(
-        args.model, args.batchsize, args.opt, args.zscore)
+    para_str = '{}_batchsize{}_{}'.format(
+        args.model, args.batchsize, args.opt)
     print("start this params CNN train: ", para_str)
     para_path = '../train_log/' + para_str
     """ model logging """
@@ -37,36 +38,30 @@ def main(args):
     train_x, train_y, valid_x, valid_y = kmnist_dl.load('../input/')
     train_x, train_y, valid_x, valid_y = load.Preprocessor().transform(train_x, train_y, valid_x, valid_y)
 
-    """ z-score """
-    mean = np.mean(train_x, axis=(0,1,2,3))
-    std = np.std(train_x, axis=(0,1,2,3))
-    train_x = (train_x-mean)/(std+1e-7)
-    valid_x = (valid_x-mean)/(std+1e-7)
-
     """ define hyper parameters """
     label_num = 10
     base_lr = 0.001
     lr_decay_rate = 1 / 3
     lr_steps = 4
-    swa = SWA(para_path+'/swa/', args.epochs - 10)
+    swa = SWA(para_path+'/swa/swa.h5', args.epochs - 40)
     csv_logger = CSVLogger( para_path + '/log.csv', separator=',')
     callbacks = [ csv_logger, swa]
 
     def lr_schedule(epoch):
-        lrate = 0.001
+        lrate = base_lr
         if epoch > 75:
-            lrate = 0.0005
+            lrate *= 0.2
         if epoch > 100:
-            lrate = 0.0003
+            lrate *= 0.2
         if epoch > 150:
-            lrate = 0.0001
+            lrate = 0.2
         return lrate
 
     """ build model """
     if args.model == 'prot3':
         select_model = model.prot3(args)
-    elif args.model == 'wrn_net':
-        select_model = model.wrn_net()
+    elif args.model == 'wrn':
+        select_model = model.wrn_net(args.imgsize)
     else:
         raise SyntaxError("please select model")
     select_model.summary()
@@ -74,7 +69,7 @@ def main(args):
     """ select optimizer """
     if args.opt == 'sgd':
         print('--- optimizer: SGD ---')
-        opt = SGD(lr=base_lr, momentum=0.9, decay=1e-6, nesterov=True)
+        opt = SGD(lr=0.1, momentum=0.9, decay=1e-6, nesterov=True)
         callbacks.append(LearningRateScheduler(lr_schedule))
     elif args.opt == 'rms':
         print('--- optimizer: RMSprop ---')
@@ -121,10 +116,19 @@ def main(args):
     #%% submit file 
     import pandas as pd
     test_x = np.load('../input/kmnist-test-imgs.npz')['arr_0']
+
+    def resize(imgs, imgsize):
+        resized_imgs = []
+        for im in imgs:
+            resized_img = cv2.resize(im, (imgsize, imgsize))
+            resized_imgs.append(resized_img)
+        resized_imgs = np.array(resized_imgs)
+        return resized_imgs
+    
+    test_x = resize(test_x, args.imgsize)
+    print('resized test_x shape:', test_x.shape)
     """ convert images """
     test_x = test_x[:, :, :, np.newaxis].astype('float32') / 255.0
-    """ z-score """
-    test_x = (test_x-mean)/(std+1e-7)
 
     print('--- predict test data ---')
     predicts = np.argmax(tools.tta(select_model, test_x, args.batchsize), axis=1)
@@ -135,6 +139,7 @@ def main(args):
     submit.Label = predicts
 
     submit.to_csv("../output/" + para_str + ".csv", index=False)
+    print('--- end train... ---')
 
 if __name__ == "__main__":
 
@@ -142,14 +147,10 @@ if __name__ == "__main__":
     parser.add_argument('--epochs', '-e', type=int, default=100)
     parser.add_argument('--imgsize', '-s', type=int, default=56)
     parser.add_argument('--batchsize', '-b', type=int, default=128)
-    parser.add_argument('--aug_mode', '-a', default='non',
-                        help='aug1 aug2 Random erasing')
     parser.add_argument('--model', '-m', default='prot3',
                         help='prot3/resnet/wrn_net')
     parser.add_argument('--opt', '-o', default='rms',
                         help='sgd rms adabound')
-    parser.add_argument('--zscore', '-z', default='True',
-                        help='true false')
 
     args = parser.parse_args()
 
