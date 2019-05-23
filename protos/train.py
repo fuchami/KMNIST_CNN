@@ -11,6 +11,7 @@ from keras.optimizers import SGD, Adam, rmsprop
 from keras.callbacks import EarlyStopping, LearningRateScheduler, ReduceLROnPlateau, CSVLogger
 from keras import backend as K
 from advanced_optimizers import AdaBound, RMSpropGraves
+from swa import SWA
 
 def main(args):
 
@@ -22,6 +23,8 @@ def main(args):
     """ model logging """
     if not os.path.exists( para_path + '/'):
         os.makedirs( para_path + '/')
+    if not os.path.exists( para_path + '/swa/'):
+        os.makedirs( para_path + '/swa/')
     """ total model logging for compare """
     if not os.path.exists('../train_log/log.csv'):
         with open('../train_log/log.csv', 'w')as f:
@@ -45,8 +48,9 @@ def main(args):
     base_lr = 0.001
     lr_decay_rate = 1 / 3
     lr_steps = 4
+    swa = SWA(para_path+'/swa/', args.epochs - 10)
     csv_logger = CSVLogger( para_path + '/log.csv', separator=',')
-    callbacks = [ csv_logger]
+    callbacks = [ csv_logger, swa]
 
     def lr_schedule(epoch):
         lrate = 0.001
