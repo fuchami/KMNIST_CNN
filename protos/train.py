@@ -6,13 +6,23 @@ import h5py
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
+import tensorflow as tf
 import keras
+from keras.backend.tensorflow_backend import set_session
 import load, model, tools
 from keras.optimizers import SGD, Adam, rmsprop
 from keras.callbacks import EarlyStopping, LearningRateScheduler, ReduceLROnPlateau, CSVLogger
 from keras import backend as K
 from advanced_optimizers import AdaBound, RMSpropGraves
 from swa import SWA
+
+config = tf.ConfigProto(
+    gpu_options=tf.GPUOptions(
+        visible_device_list = "2", # specify GPU number
+        allow_growth = True
+    )
+)
+set_session(tf.Session(config=config))
 
 def main(args):
 
