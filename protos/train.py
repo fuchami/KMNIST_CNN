@@ -12,11 +12,15 @@ from keras.backend.tensorflow_backend import set_session
 from keras.optimizers import SGD, Adam, rmsprop
 from keras.callbacks import EarlyStopping, LearningRateScheduler, ReduceLROnPlateau, CSVLogger
 from keras import backend as K
+from keras.utils.training_utils import multi_gpu_model
 from advanced_optimizers import AdaBound, RMSpropGraves
 from swa import SWA
 
-import load, model, tools 
+import load, tools 
+from model import prot3_SE
 from wideresnet import create_wide_residual_network
+
+gpu_count = 2
 
 config = tf.ConfigProto(
     gpu_options=tf.GPUOptions(
@@ -27,6 +31,7 @@ config = tf.ConfigProto(
 set_session(tf.Session(config=config))
 
 def main(args):
+    batchsize = gpu_count * args.batchsize
 
     """ log params """
     para_str = '{}_imgsize{}_batchsize{}_{}_SEmodule_{}'.format(
@@ -71,14 +76,15 @@ def main(args):
 
     """ build model """
     if args.model == 'prot3':
-        select_model = model.prot3_SE(args)
+        select_model = prot3_SE(args)
     elif args.model == 'wrn':
         # select_model = model.wrn_net(args.imgsize)
         input_dim = (args.imgsize, args.imgsize, 1)
         select_model = create_wide_residual_network(input_dim, N=2, k=8, se_module=args.se)
     else:
         raise SyntaxError("please select model")
-    select_model.summary()
+    model = multi_gpu_model(select_model, gpus=gpu_count)
+    model.summary()
 
     """ select optimizer """
     if args.opt == 'sgd':
@@ -98,23 +104,26 @@ def main(args):
         opt = AdaBound(lr=0.001, final_lr=0.1, gamma=0.001, weight_decay=5e-4, amsbound=False)
 
     loss = keras.losses.categorical_crossentropy
-    select_model.compile(loss=loss, optimizer=opt, metrics=['accuracy'])
+    model.compile(loss=loss, optimizer=opt, metrics=['accuracy'])
 
     train_generator, valid_generator = load.mygenerator(args, train_x, train_y, valid_x, valid_y, label_num)
 
     """ model train """
-    history = select_model.fit_generator(train_generator,
-                        steps_per_epoch = 51000//args.batchsize,
+    history = model.fit_generator(train_generator,
+                        steps_per_epoch = 51000//batchsize,
                         validation_data= valid_generator,
-                        validation_steps=9000//args.batchsize,
+                        validation_steps=9000//batchsize,
                         epochs=args.epochs,
-                        callbacks=callbacks)
+                        callbacks=callbacks,
+                        workers=32,
+                        max_queue_size=64,
+                        use_multiprocessing=True)
     """ plot learning history """
     # tools.plot_history(history, para_str, para_path)
 
     """ evaluate model """
-    train_score = select_model.evaluate(train_x, train_y)
-    validation_score = select_model.evaluate(valid_x, valid_y)
+    train_score = model.evaluate(train_x, train_y)
+    validation_score = model.evaluate(valid_x, valid_y)
 
     print('Train loss :', train_score[0])
     print('Train accuracy :', train_score[1])
@@ -145,7 +154,7 @@ def main(args):
     test_x = test_x[:, :, :, np.newaxis].astype('float32') / 255.0
 
     print('--- predict test data ---')
-    predicts = np.argmax(tools.tta(select_model, test_x, args.batchsize), axis=1)
+    predicts = np.argmax(tools.tta(model, test_x, args.batchsize), axis=1)
 
     print('predicts.shape: ', predicts.shape) # hope shape(10000, )
     submit = pd.DataFrame(data={"ImageId": [], "Label": []})
