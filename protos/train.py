@@ -12,15 +12,12 @@ from keras.backend.tensorflow_backend import set_session
 from keras.optimizers import SGD, Adam, rmsprop
 from keras.callbacks import EarlyStopping, LearningRateScheduler, ReduceLROnPlateau, CSVLogger
 from keras import backend as K
-from keras.utils.training_utils import multi_gpu_model
 from advanced_optimizers import AdaBound, RMSpropGraves
 from swa import SWA
 
 import load, tools 
 from model import prot3_SE
 from wideresnet import create_wide_residual_network
-
-gpu_count = 2
 
 config = tf.ConfigProto(
     gpu_options=tf.GPUOptions(
@@ -31,7 +28,6 @@ config = tf.ConfigProto(
 set_session(tf.Session(config=config))
 
 def main(args):
-    batchsize = gpu_count * args.batchsize
 
     """ log params """
     para_str = '{}_imgsize{}_batchsize{}_{}_SEmodule_{}'.format(
@@ -76,14 +72,14 @@ def main(args):
 
     """ build model """
     if args.model == 'prot3':
-        select_model = prot3_SE(args)
+        model = prot3_SE(args)
     elif args.model == 'wrn':
         # select_model = model.wrn_net(args.imgsize)
         input_dim = (args.imgsize, args.imgsize, 1)
-        select_model = create_wide_residual_network(input_dim, N=2, k=8, se_module=args.se)
+        model = create_wide_residual_network(input_dim, N=2, k=8, se_module=args.se)
     else:
         raise SyntaxError("please select model")
-    model = multi_gpu_model(select_model, gpus=gpu_count)
+    # model = multi_gpu_model(select_model, gpus=gpu_count)
     model.summary()
 
     """ select optimizer """
@@ -110,14 +106,11 @@ def main(args):
 
     """ model train """
     history = model.fit_generator(train_generator,
-                        steps_per_epoch = 51000//batchsize,
+                        steps_per_epoch = 51000//args.batchsize,
                         validation_data= valid_generator,
-                        validation_steps=9000//batchsize,
+                        validation_steps=9000//args.batchsize,
                         epochs=args.epochs,
-                        callbacks=callbacks,
-                        workers=32,
-                        max_queue_size=64,
-                        use_multiprocessing=True)
+                        callbacks=callbacks)
     """ plot learning history """
     # tools.plot_history(history, para_str, para_path)
 
