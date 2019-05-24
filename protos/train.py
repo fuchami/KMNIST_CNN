@@ -113,6 +113,8 @@ def main(args):
                         callbacks=callbacks)
     """ plot learning history """
     # tools.plot_history(history, para_str, para_path)
+    """ save model """
+    model.save(para_path + 'model.h5')
 
     """ evaluate model """
     train_score = model.evaluate(train_x, train_y)
