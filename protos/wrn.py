@@ -18,7 +18,7 @@ from keras.utils               import plot_model
 from operator                  import getitem
 
 
-def computational_graph(class_size,n=4, k=10):
+def computational_graph(class_size,n=2, k=8):
     # WRN-16-8の場合、N = 2、k = 8
     # WRN-28-10の場合、N = 4、k = 10
     # WRN-40-4の場合、N = 6、k = 4

@@ -17,8 +17,8 @@ from swa import SWA
 def main(args):
 
     """ log params """
-    para_str = '{}_batchsize{}_{}'.format(
-        args.model, args.batchsize, args.opt)
+    para_str = '{}_imgsize{}_batchsize{}_{}'.format(
+        args.model,args.imgsize, args.batchsize, args.opt)
     print("start this params CNN train: ", para_str)
     para_path = '../train_log/' + para_str
     """ model logging """
@@ -54,7 +54,7 @@ def main(args):
         if epoch > 100:
             lrate *= 0.2
         if epoch > 150:
-            lrate = 0.2
+            lrate *= 0.2
         return lrate
 
     """ build model """
