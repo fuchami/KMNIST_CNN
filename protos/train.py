@@ -29,8 +29,8 @@ set_session(tf.Session(config=config))
 def main(args):
 
     """ log params """
-    para_str = '{}_imgsize{}_batchsize{}_{}'.format(
-        args.model,args.imgsize, args.batchsize, args.opt)
+    para_str = '{}_imgsize{}_batchsize{}_{}_SEmodule_'.format(
+        args.model,args.imgsize, args.batchsize, args.opt, args.se)
     print("start this params CNN train: ", para_str)
     para_path = '../train_log/' + para_str
     """ model logging """
@@ -75,7 +75,7 @@ def main(args):
     elif args.model == 'wrn':
         # select_model = model.wrn_net(args.imgsize)
         input_dim = (args.imgsize, args.imgsize)
-        select_model = create_wide_residual_network(input_dim, N=4, k=8, se_module=True)
+        select_model = create_wide_residual_network(input_dim, N=2, k=8, se_module=args.se)
     else:
         raise SyntaxError("please select model")
     select_model.summary()
@@ -165,6 +165,8 @@ if __name__ == "__main__":
                         help='prot3/resnet/wrn_net')
     parser.add_argument('--opt', '-o', default='rms',
                         help='sgd rms adabound')
+    parser.add_argument('--se', '-q', default=False,
+                        help='add se_module')
 
     args = parser.parse_args()
 
