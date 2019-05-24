@@ -10,10 +10,23 @@ import pandas as pd
 import seaborn as sn
 from sklearn.metrics import confusion_matrix
 from keras.preprocessing.image import ImageDataGenerator
-import tqdm
+from tqdm import tqdm
 
 # test time augmentation
-def tta(model, test_x, batch_size):
+def tta_prediction(model, test_x, n_examples=10):
+    test_datagen = ImageDataGenerator(shear_range=0.1,
+                                        zoom_range=0.1,
+                                        width_shift_range=0.1,
+                                        height_shift_range=0.1,
+                                        rotation_range=15)
+    test_generator = test_datagen.flow(test_x, batch_size=n_examples)
+    yhats = model.predict_generator(test_datagen, steps=n_examples, verbose=1)
+    
+    print(yhats)
+    print(yhats.shape)
+
+
+def tta(model, test_x, batch_size=128):
     tta_steps = 10
     predictions = []
 
@@ -26,11 +39,11 @@ def tta(model, test_x, batch_size):
 
     for i in tqdm(list(range(tta_steps))):
         preds = model.predict_generator(test_generator, steps=test_x.shape[0]/batch_size)
+        print(preds.shape)
         predictions.append(preds)
+    
+    return np.mean(predictions, axis=0)
 
-    pred = np.mean(predictions, axis=0)
-    print('pred.shape:', pred.shape)
-    return pred
 
 def plot_history(history, parastr, path):
 

@@ -37,8 +37,6 @@ def main(args):
     """ model logging """
     if not os.path.exists( para_path + '/'):
         os.makedirs( para_path + '/')
-    if not os.path.exists( para_path + '/swa/'):
-        os.makedirs( para_path + '/swa/')
     """ total model logging for compare """
     if not os.path.exists('../train_log/log.csv'):
         with open('../train_log/log.csv', 'w')as f:
@@ -56,7 +54,7 @@ def main(args):
     base_lr = 0.001
     lr_decay_rate = 1 / 3
     lr_steps = 4
-    swa = SWA(para_path+'/swa/swa.h5', args.epochs - 40)
+    swa = SWA(para_path+'/swa.h5', args.epochs - 40)
     csv_logger = CSVLogger( para_path + '/log.csv', separator=',')
     callbacks = [ csv_logger, swa]
 
@@ -169,8 +167,7 @@ def main(args):
     #####################################################################
 
     print('--- predict test time augmentation data ---')
-    predicts = tools.tta(model, test_x, args.batchsize)
-    predicts = np.argmax(predicts, axis=1)
+    predicts = np.argmax(tools.tta(model, test_x), axis=1)
 
     print('predicts.shape: ', predicts.shape) # hope shape(10000, )
     print(predicts) # array([2, 9, 3, ..., 9, 4, 2])
