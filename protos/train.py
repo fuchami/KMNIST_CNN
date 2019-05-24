@@ -29,8 +29,8 @@ set_session(tf.Session(config=config))
 def main(args):
 
     """ log params """
-    para_str = '{}_imgsize{}_batchsize{}_{}_SEmodule_'.format(
-        args.model,args.imgsize, args.batchsize, args.opt, args.se)
+    para_str = '{}_imgsize{}_batchsize{}_{}_SEmodule_{}'.format(
+        args.model, args.imgsize, args.batchsize, args.opt, args.se)
     print("start this params CNN train: ", para_str)
     para_path = '../train_log/' + para_str
     """ model logging """
@@ -71,10 +71,10 @@ def main(args):
 
     """ build model """
     if args.model == 'prot3':
-        select_model = model.prot3(args)
+        select_model = model.prot3_SE(args)
     elif args.model == 'wrn':
         # select_model = model.wrn_net(args.imgsize)
-        input_dim = (args.imgsize, args.imgsize)
+        input_dim = (args.imgsize, args.imgsize, 1)
         select_model = create_wide_residual_network(input_dim, N=2, k=8, se_module=args.se)
     else:
         raise SyntaxError("please select model")
@@ -158,8 +158,8 @@ def main(args):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='train CNN model for classify')
-    parser.add_argument('--epochs', '-e', type=int, default=100)
-    parser.add_argument('--imgsize', '-s', type=int, default=56)
+    parser.add_argument('--epochs', '-e', type=int, default=200)
+    parser.add_argument('--imgsize', '-s', type=int, default=32)
     parser.add_argument('--batchsize', '-b', type=int, default=128)
     parser.add_argument('--model', '-m', default='prot3',
                         help='prot3/resnet/wrn_net')

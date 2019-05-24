@@ -15,87 +15,60 @@ from keras import backend as K
 
 from funcy import concat, identity, juxt, partial, rcompose, repeat, repeatedly, take
 import wrn
+from wideresnet import se_block
 
-
-def wrn_net(imgsize):
-    model = Model(*juxt(identity, wrn.computational_graph(10))(Input(shape=(imgsize,imgsize,1))))
-
-    return model
-
-def prot2():
-    """
-    BatchNorm
-    https://www.kaggle.com/kentaroyoshioka47/cnn-with-batchnormalization-in-keras-94#L71
-    """
-    model = Sequential()
-    #convolution 1st layer
-    model.add(Conv2D(64, (3,3), padding="same",
-                    activation='relu',
-                    input_shape=(28,28,1)))
-    model.add(BatchNormalization())
-    model.add(Dropout(0.25))#3
-    #model.add(MaxPooling2D())
-
-    #convolution 2nd layer
-    model.add(Conv2D(64, (3,3), activation='relu',border_mode="same"))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D())
-    model.add(Dropout(0.25))
-
-    #convolution 3rd layer
-    model.add(Conv2D(64, (3,3), activation='relu',border_mode="same"))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D())
-    model.add(Dropout(0.25))
-
-    #Fully connected 1st layer
-    model.add(Flatten()) 
-    model.add(Dense(500,use_bias=False))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    model.add(Dropout(0.25))
-
-    #Fully connected final layer
-    model.add(Dense(10))
-    model.add(Activation('softmax'))
-
-    return model
-
-def prot3(args):
+def prot3_SE(args):
     """
     https://appliedmachinelearning.blog/2018/03/24/achieving-90-accuracy-in-object-recognition-task-on-cifar-10-dataset-with-keras-convolutional-neural-networks/
+    これにSEmoduleを追加した版
     """
-    weight_decay = 1e-4 #記事通りなら1e-4
-    model = Sequential()
-    model.add(Conv2D(32, (3,3), padding='same', kernel_regularizer=regularizers.l2(weight_decay), input_shape=(args.imgsize,args.imgsize,1)))
-    model.add(Activation('elu'))
-    model.add(BatchNormalization())
-    model.add(Conv2D(32, (3,3), padding='same', kernel_regularizer=regularizers.l2(weight_decay)))
-    model.add(Activation('elu'))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=(2,2)))
-    model.add(Dropout(0.2))
-    
-    model.add(Conv2D(64, (3,3), padding='same', kernel_regularizer=regularizers.l2(weight_decay)))
-    model.add(Activation('elu'))
-    model.add(BatchNormalization())
-    model.add(Conv2D(64, (3,3), padding='same', kernel_regularizer=regularizers.l2(weight_decay)))
-    model.add(Activation('elu'))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=(2,2)))
-    model.add(Dropout(0.3))
-    
-    model.add(Conv2D(128, (3,3), padding='same', kernel_regularizer=regularizers.l2(weight_decay)))
-    model.add(Activation('elu'))
-    model.add(BatchNormalization())
-    model.add(Conv2D(128, (3,3), padding='same', kernel_regularizer=regularizers.l2(weight_decay)))
-    model.add(Activation('elu'))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=(2,2)))
-    model.add(Dropout(0.4))
-    
-    model.add(GlobalAveragePooling2D())
+    weight_decay = 1e-4 
+    inputs = Input(shape=(args.imgsize, args.imgsize, 1))
 
-    model.add(Dense(10, activation='softmax'))
+    x = Conv2D(32, (3,3), padding='same', kernel_initializer='he_normal',
+                kernel_regularizer=regularizers.l2(weight_decay), use_bias=False)(inputs)
+    x = Activation('elu')(x)
+    x = BatchNormalization(momdentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(x)
+    if args.se : x = se_block(x, 32)
 
+    x = Conv2D(32, (3,3), padding='same', kernel_initializer='he_normal',
+                kernel_regularizer=regularizers.l2(weight_decay), use_bias=False)(inputs)
+    x = Activation('elu')(x)
+    x = BatchNormalization(momdentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(x)
+    x = MaxPooling2D(pool_size=(2,2))(x)
+    x = Dropout(0.2)(x)
+    if args.se : x = se_block(x, 32)
+
+    x = Conv2D(64, (3,3), padding='same', kernel_initializer='he_normal',
+                kernel_regularizer=regularizers.l2(weight_decay), use_bias=False)(inputs)
+    x = Activation('elu')(x)
+    x = BatchNormalization(momdentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(x)
+    if args.se : x = se_block(x, 64)
+
+    x = Conv2D(64, (3,3), padding='same', kernel_initializer='he_normal',
+                kernel_regularizer=regularizers.l2(weight_decay), use_bias=False)(inputs)
+    x = Activation('elu')(x)
+    x = BatchNormalization(momdentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(x)
+    x = MaxPooling2D(pool_size=(2,2))(x)
+    x = Dropout(0.3)(x)
+    if args.se : x = se_block(x, 64)
+
+    x = Conv2D(128, (3,3), padding='same', kernel_initializer='he_normal',
+                kernel_regularizer=regularizers.l2(weight_decay), use_bias=False)(inputs)
+    x = Activation('elu')(x)
+    x = BatchNormalization(momdentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(x)
+    if args.se : x = se_block(x, 128)
+
+    x = Conv2D(128, (3,3), padding='same', kernel_initializer='he_normal',
+                kernel_regularizer=regularizers.l2(weight_decay), use_bias=False)(inputs)
+    x = Activation('elu')(x)
+    x = BatchNormalization(momdentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(x)
+    x = MaxPooling2D(pool_size=(2,2))(x)
+    x = Dropout(0.4)(x)
+    if args.se : x = se_block(x, 128)
+
+    x = GlobalAveragePooling2D()(x)
+    x = Dense(10, activation='softmax')
+
+    model = Model(inputs, x)
     return model

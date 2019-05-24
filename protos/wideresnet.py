@@ -20,7 +20,7 @@ k: width
 Dropout 0.3~0.4
 """
 
-def se_block(in_block, ch, ratio=16):
+def se_block(in_block, ch, ratio=8):
     z = GlobalAveragePooling2D()(in_block)
     x = Dense(ch//ratio, activation='relu')(z)
     x = Dense(ch, activation='sigmoid')(x)
