@@ -146,15 +146,37 @@ def main(args):
     """ convert images """
     test_x = test_x[:, :, :, np.newaxis].astype('float32') / 255.0
 
-    print('--- predict test data ---')
-    predicts = np.argmax(tools.tta(model, test_x, args.batchsize), axis=1)
+    #####################################################################
+    #####################################################################
+    #####################################################################
+
+    print('--- predict test time augmentation data ---')
+    predicts = np.argmax(model.predict(test_x), axis=1)
 
     print('predicts.shape: ', predicts.shape) # hope shape(10000, )
+    print(predicts)
+    print('predicts', predicts)
     submit = pd.DataFrame(data={"ImageId": [], "Label": []})
     submit.ImageId = list(range(1, predicts.shape[0]+1))
     submit.Label = predicts
 
     submit.to_csv("../output/" + para_str + ".csv", index=False)
+
+    #####################################################################
+    #####################################################################
+    #####################################################################
+
+    print('--- predict test time augmentation data ---')
+    predicts = tools.tta(model, test_x, args.batchsize)
+    predicts = np.argmax(predicts, axis=1)
+
+    print('predicts.shape: ', predicts.shape) # hope shape(10000, )
+    print(predicts) # array([2, 9, 3, ..., 9, 4, 2])
+    submit = pd.DataFrame(data={"ImageId": [], "Label": []})
+    submit.ImageId = list(range(1, predicts.shape[0]+1))
+    submit.Label = predicts
+
+    submit.to_csv("../output/" + para_str + "wTTA.csv", index=False)
     print('--- end train... ---')
 
 if __name__ == "__main__":

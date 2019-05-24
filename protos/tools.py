@@ -10,6 +10,7 @@ import pandas as pd
 import seaborn as sn
 from sklearn.metrics import confusion_matrix
 from keras.preprocessing.image import ImageDataGenerator
+import tqdm
 
 # test time augmentation
 def tta(model, test_x, batch_size):
@@ -23,7 +24,7 @@ def tta(model, test_x, batch_size):
                                         rotation_range=15)
     test_generator = test_datagen.flow(test_x, batch_size=batch_size, shuffle=False)
 
-    for i in range(tta_steps):
+    for i in tqdm(list(range(tta_steps))):
         preds = model.predict_generator(test_generator, steps=test_x.shape[0]/batch_size)
         predictions.append(preds)
 
