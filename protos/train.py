@@ -9,16 +9,18 @@ import cv2
 import tensorflow as tf
 import keras
 from keras.backend.tensorflow_backend import set_session
-import load, model, tools
 from keras.optimizers import SGD, Adam, rmsprop
 from keras.callbacks import EarlyStopping, LearningRateScheduler, ReduceLROnPlateau, CSVLogger
 from keras import backend as K
 from advanced_optimizers import AdaBound, RMSpropGraves
 from swa import SWA
 
+import load, model, tools 
+from wideresnet import create_wide_residual_network
+
 config = tf.ConfigProto(
     gpu_options=tf.GPUOptions(
-        visible_device_list = "2", # specify GPU number
+        visible_device_list = "0,1", # specify GPU number
         allow_growth = True
     )
 )
@@ -71,7 +73,9 @@ def main(args):
     if args.model == 'prot3':
         select_model = model.prot3(args)
     elif args.model == 'wrn':
-        select_model = model.wrn_net(args.imgsize)
+        # select_model = model.wrn_net(args.imgsize)
+        input_dim = (args.imgsize, args.imgsize)
+        select_model = create_wide_residual_network(input_dim, N=4, k=8, se_module=True)
     else:
         raise SyntaxError("please select model")
     select_model.summary()
