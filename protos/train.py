@@ -112,7 +112,7 @@ def main(args):
     """ plot learning history """
     # tools.plot_history(history, para_str, para_path)
     """ save model """
-    model.save(para_path + 'model.h5')
+    model.save(para_path + '/model.h5')
 
     """ evaluate model """
     train_score = model.evaluate(train_x, train_y)
@@ -150,7 +150,7 @@ def main(args):
     #####################################################################
     #####################################################################
 
-    print('--- predict test time augmentation data ---')
+    print('--- predict data ---')
     predicts = np.argmax(model.predict(test_x), axis=1)
 
     print('predicts.shape: ', predicts.shape) # hope shape(10000, )
@@ -167,7 +167,8 @@ def main(args):
     #####################################################################
 
     print('--- predict test time augmentation data ---')
-    predicts = np.argmax(tools.tta(model, test_x), axis=1)
+    predicts = tools.tta(model, test_x, tta_steps=50)
+    predicts = np.argmax(predicts, axis=1)
 
     print('predicts.shape: ', predicts.shape) # hope shape(10000, )
     print(predicts) # array([2, 9, 3, ..., 9, 4, 2])

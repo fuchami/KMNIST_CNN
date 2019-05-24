@@ -25,25 +25,19 @@ def tta_prediction(model, test_x, n_examples=10):
     print(yhats)
     print(yhats.shape)
 
-
-def tta(model, test_x, batch_size=128):
-    tta_steps = 10
+def TTA(model, X, batch_size=128, tta_steps=30):
+    test_datagen = ImageDataGenerator(
+                                    rotation_range=20,
+                                    width_shift_range=0.1,
+                                    height_shift_range=0.1,
+                                    shear_range=0.1,
+                                    zoom_range=0.08)
     predictions = []
-
-    test_datagen = ImageDataGenerator(shear_range=0.1,
-                                        zoom_range=0.1,
-                                        width_shift_range=0.1,
-                                        height_shift_range=0.1,
-                                        rotation_range=15)
-    test_generator = test_datagen.flow(test_x, batch_size=batch_size, shuffle=False)
-
     for i in tqdm(list(range(tta_steps))):
-        preds = model.predict_generator(test_generator, steps=test_x.shape[0]/batch_size)
-        print(preds.shape)
-        predictions.append(preds)
-    
-    return np.mean(predictions, axis=0)
+    preds = model.predict_generator(test_datagen.flow(X, batch_size=batch_size, shuffle=False), steps = X.shape[0] / batch_size)
+    predictions.append(preds)
 
+    return np.mean(predictions, axis=0)
 
 def plot_history(history, parastr, path):
 
