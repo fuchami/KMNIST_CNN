@@ -49,6 +49,8 @@ def main(args):
     train_x, train_y, valid_x, valid_y = kmnist_dl.load('../input/')
     train_x, train_y, valid_x, valid_y = load.Preprocessor().transform(train_x, train_y, valid_x, valid_y)
 
+    train_generator, valid_generator = load.mygenerator(args, train_x, train_y, valid_x, valid_y, label_num)
+
     """ define hyper parameters """
     label_num = 10
     base_lr = 0.001
@@ -93,14 +95,15 @@ def main(args):
         print('--- optimizer: RMSpropGraves ---')
         opt = RMSpropGraves(lr=0.001, decay=1e-6)
         callbacks.append(LearningRateScheduler(lr_schedule))
+    elif args.opt == 'adam':
+        print('--- optimizer: adam ---')
+        opt =  Adam()
     elif args.opt == 'adabound':
         print('--- optimizer: adabound ---')
-        opt = AdaBound(lr=0.001, final_lr=0.1, gamma=0.001, weight_decay=5e-4, amsbound=False)
+        opt = AdaBound(lr=1e-3, final_lr=0.1, amsbound=False)
 
     loss = keras.losses.categorical_crossentropy
     model.compile(loss=loss, optimizer=opt, metrics=['accuracy'])
-
-    train_generator, valid_generator = load.mygenerator(args, train_x, train_y, valid_x, valid_y, label_num)
 
     """ model train """
     history = model.fit_generator(train_generator,
@@ -110,7 +113,7 @@ def main(args):
                         epochs=args.epochs,
                         callbacks=callbacks)
     """ plot learning history """
-    # tools.plot_history(history, para_str, para_path)
+    tools.plot_history(history, para_str, para_path)
     """ save model """
     model.save(para_path + '/model.h5')
 
@@ -146,10 +149,6 @@ def main(args):
     """ convert images """
     test_x = test_x[:, :, :, np.newaxis].astype('float32') / 255.0
 
-    #####################################################################
-    #####################################################################
-    #####################################################################
-
     print('--- predict data ---')
     predicts = np.argmax(model.predict(test_x), axis=1)
 
@@ -162,21 +161,6 @@ def main(args):
 
     submit.to_csv("../output/" + para_str + ".csv", index=False)
 
-    #####################################################################
-    #####################################################################
-    #####################################################################
-
-    print('--- predict test time augmentation data ---')
-    predicts = tools.tta(model, test_x, tta_steps=50)
-    predicts = np.argmax(predicts, axis=1)
-
-    print('predicts.shape: ', predicts.shape) # hope shape(10000, )
-    print(predicts) # array([2, 9, 3, ..., 9, 4, 2])
-    submit = pd.DataFrame(data={"ImageId": [], "Label": []})
-    submit.ImageId = list(range(1, predicts.shape[0]+1))
-    submit.Label = predicts
-
-    submit.to_csv("../output/" + para_str + "wTTA.csv", index=False)
     print('--- end train... ---')
 
 if __name__ == "__main__":
