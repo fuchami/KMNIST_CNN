@@ -16,7 +16,7 @@ from advanced_optimizers import AdaBound, RMSpropGraves
 from swa import SWA
 
 import load, tools 
-from model import prot3_SE
+from model import prot4_SE
 from wideresnet import create_wide_residual_network
 
 config = tf.ConfigProto(
@@ -69,8 +69,8 @@ def main(args):
         return lrate
 
     """ build model """
-    if args.model == 'prot3':
-        model = prot3_SE(args)
+    if args.model == 'prot4':
+        model = prot4_SE(args)
     elif args.model == 'wrn':
         # select_model = model.wrn_net(args.imgsize)
         input_dim = (args.imgsize, args.imgsize, 1)
@@ -185,8 +185,8 @@ if __name__ == "__main__":
     parser.add_argument('--epochs', '-e', type=int, default=200)
     parser.add_argument('--imgsize', '-s', type=int, default=32)
     parser.add_argument('--batchsize', '-b', type=int, default=128)
-    parser.add_argument('--model', '-m', default='prot3',
-                        help='prot3/resnet/wrn_net')
+    parser.add_argument('--model', '-m', default='prot4',
+                        help='prot4/resnet/wrn_net')
     parser.add_argument('--opt', '-o', default='rms',
                         help='sgd rms adabound')
     parser.add_argument('--se', '-q', default=False,

@@ -18,7 +18,7 @@ from funcy import concat, identity, juxt, partial, rcompose, repeat, repeatedly,
 import wrn
 from wideresnet import se_block
 
-def prot3_SE(args):
+def prot4_SE(args):
     """
     https://appliedmachinelearning.blog/2018/03/24/achieving-90-accuracy-in-object-recognition-task-on-cifar-10-dataset-with-keras-convolutional-neural-networks/
     """
@@ -36,23 +36,23 @@ def prot3_SE(args):
                 kernel_regularizer=regularizers.l2(weight_decay), use_bias=False)(x)
     x = Activation('elu')(x)
     x = BatchNormalization(momentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(x)
-    x = MaxPooling2D(pool_size=(2,2))(x)
-    x = Dropout(0.3)(x)
     if args.se : x = se_block(x, 32)
-
-    x = Conv2D(64, (3,3), padding='same', kernel_initializer='he_normal',
-                kernel_regularizer=regularizers.l2(weight_decay), use_bias=False)(x)
-    x = Activation('elu')(x)
-    x = BatchNormalization(momentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(x)
-    if args.se : x = se_block(x, 64)
-
-    x = Conv2D(64, (3,3), padding='same', kernel_initializer='he_normal',
-                kernel_regularizer=regularizers.l2(weight_decay), use_bias=False)(x)
-    x = Activation('elu')(x)
-    x = BatchNormalization(momentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(x)
     x = MaxPooling2D(pool_size=(2,2))(x)
     x = Dropout(0.3)(x)
+
+    x = Conv2D(64, (3,3), padding='same', kernel_initializer='he_normal',
+                kernel_regularizer=regularizers.l2(weight_decay), use_bias=False)(x)
+    x = Activation('elu')(x)
+    x = BatchNormalization(momentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(x)
     if args.se : x = se_block(x, 64)
+
+    x = Conv2D(64, (3,3), padding='same', kernel_initializer='he_normal',
+                kernel_regularizer=regularizers.l2(weight_decay), use_bias=False)(x)
+    x = Activation('elu')(x)
+    x = BatchNormalization(momentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(x)
+    if args.se : x = se_block(x, 64)
+    x = MaxPooling2D(pool_size=(2,2))(x)
+    x = Dropout(0.3)(x)
 
     x = Conv2D(128, (3,3), padding='same', kernel_initializer='he_normal',
                 kernel_regularizer=regularizers.l2(weight_decay), use_bias=False)(x)
@@ -64,9 +64,9 @@ def prot3_SE(args):
                 kernel_regularizer=regularizers.l2(weight_decay), use_bias=False)(x)
     x = Activation('elu')(x)
     x = BatchNormalization(momentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(x)
+    if args.se : x = se_block(x, 128)
     x = MaxPooling2D(pool_size=(2,2))(x)
     x = Dropout(0.4)(x)
-    if args.se : x = se_block(x, 128)
 
     x = GlobalAveragePooling2D()(x)
     x = Dense(10, activation='softmax')(x)
