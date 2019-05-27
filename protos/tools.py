@@ -34,8 +34,8 @@ def TTA(model, X, batch_size=128, tta_steps=30):
                                     zoom_range=0.08)
     predictions = []
     for i in tqdm(list(range(tta_steps))):
-    preds = model.predict_generator(test_datagen.flow(X, batch_size=batch_size, shuffle=False), steps = X.shape[0] / batch_size)
-    predictions.append(preds)
+        preds = model.predict_generator(test_datagen.flow(X, batch_size=batch_size, shuffle=False), steps = X.shape[0] / batch_size)
+        predictions.append(preds)
 
     return np.mean(predictions, axis=0)
 
