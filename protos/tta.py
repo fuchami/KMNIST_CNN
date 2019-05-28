@@ -1,21 +1,24 @@
 # coding:utf-8
 import numpy as np
-import keras
-import cv2
 import pandas as pd
+
+import keras
+from keras.preprocessing.image import ImageDataGenerator
+import cv2
 from wideresnet import create_wide_residual_network
 import load
 
 class TTA_predict():
 
     def __init__(self, model_path):
-        self.model = keras.models.load_model(model_path, compile=False)
+        self.model = keras.models.load_model(model_path + '/model.h5', compile=False)
         self.model.summary()
 
-        self.imgsize = 32
+        self.imgsize = 42
+        self.tta_steps = 15
         self.test_path = '../input/kmnist-test-imgs.npz'
 
-        self.para_path = model_path.lstrip("./").rstrip(".h5")
+        self.para_path = model_path.lstrip("../train_log/")
         print(self.para_path)
 
         self.create_submit()
@@ -67,13 +70,37 @@ class TTA_predict():
         image[top:bottom, left:right, :].fill(mask_value)
 
         return image
+    def predict_wDataGenerator(self):
+        X = self.test_load()
+        print(X.shape)
+
+        test_datagen =  ImageDataGenerator(
+                            shear_range=0.1,
+                            zoom_range = 0.1,
+                            rotation_range = 10,
+                            width_shift_range = 0.1,
+                            height_shift_range = 0.1)
+        predictions = []
+
+        for i in range(self.tta_steps):
+            preds = self.model.predict_generator(
+                            test_datagen.flow(X, batch_size=128, shuffle=False),
+                            steps = len(X)/128)
+            print(preds.shape)
+            predictions.append(preds)
+        
+        pred = np.mean(predictions, axis=0)
+        print(pred.shape)
+        predicts = np.argmax(pred, axis=1)
+        print(predicts)
+        print('preditcs.shpae: ', predicts.shape) # shape(1000,)
+        return predicts
     
     def predict(self):
         X = self.test_load()
         print(X.shape)
 
         pred = []
-        cnt = 0
         for x_i in X:
             """ random erasing1 """
             x_p1 = self.random_eraser(x_i)
@@ -91,28 +118,24 @@ class TTA_predict():
             p = (p0 * 0.6) + (p1 * 0.3) + (p2 * 0.3)
             print('final predict: ', np.argmax(p, axis=1))
             pred.append(p[0])
-            cnt +=1
-            if cnt > 10: break
 
         pred = np.array(pred)
         return pred
     
     def _expand(self, x):
         return np.expand_dims(np.expand_dims(x, axis=0), axis=3)
-    validation_score = model.evaluate(valid_x, valid_y)
 
     def create_submit(self):
-        predicts = np.argmax(self.predict(), axis=1)
-        print(predicts)
-        print('preditcs.shpae: ', predicts.shape) # shape(1000,)
+        # predicts = np.argmax(self.predict(), axis=1)
+        predicts = self.predict_wDataGenerator()
 
         submit = pd.DataFrame(data={"ImageId": [], "Label": []})
         submit.ImageId = list(range(1, predicts.shape[0]+1))
         submit.Label = predicts
 
-        print("../output/" + self.para_path + "_wTTA.csv")
-        submit.to_csv("../output/" + self.para_path + "_wTTA.csv", index=False)
+        print('../output/wTTA_' + self.para_path + ".csv")
+        submit.to_csv("../output/wTTA_" + self.para_path + ".csv", index=False)
 
 if __name__ == "__main__":
-    model_path = './wrn_imgsize32_batchsize128_sgd_SEmodule_Truemodel.h5'
+    model_path = '../train_log/wrn_imgsize42_batchsize128_adabound_SEmodule_True'
     tta = TTA_predict(model_path)

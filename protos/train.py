@@ -76,7 +76,7 @@ def main(args):
     elif args.model == 'wrn':
         # select_model = model.wrn_net(args.imgsize)
         input_dim = (args.imgsize, args.imgsize, 1)
-        model = create_wide_residual_network(input_dim, N=2, k=8, se_module=args.se)
+        model = create_wide_residual_network(input_dim, N=4, k=10, se_module=args.se)
     else:
         raise SyntaxError("please select model")
     # model = multi_gpu_model(select_model, gpus=gpu_count)
