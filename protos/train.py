@@ -28,6 +28,7 @@ config = tf.ConfigProto(
 set_session(tf.Session(config=config))
 
 def main(args):
+    label_num = 10
 
     """ log params """
     para_str = '{}_imgsize{}_batchsize{}_{}_SEmodule_{}'.format(
@@ -52,7 +53,6 @@ def main(args):
     train_generator, valid_generator = load.mygenerator(args, train_x, train_y, valid_x, valid_y, label_num)
 
     """ define hyper parameters """
-    label_num = 10
     base_lr = 0.001
     lr_decay_rate = 1 / 3
     lr_steps = 4
