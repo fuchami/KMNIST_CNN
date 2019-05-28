@@ -4,6 +4,7 @@ import keras
 import cv2
 import pandas as pd
 from wideresnet import create_wide_residual_network
+import load
 
 class TTA_predict():
 
@@ -28,6 +29,17 @@ class TTA_predict():
         resized_imgs = np.array(resized_imgs)
         resized_imgs = resized_imgs[:, :, :, np.newaxis].astype('float32') / 255.0
         return resized_imgs
+    
+    def valid_load(self):
+        kmnist_dl = load.KMNISTDataLoader(img_resize=self.imgsize)
+        _, _, valid_x, valid_y = kmnist_dl.load('../input/')
+        _, _, valid_x, valid_y = load.Preprocessor().transform(train_x, train_y, valid_x, valid_y)
+
+        """ evaluate score """
+        validation_score = self.model.evaluate(valid_x, valid_y)
+        print('validation loss :', validation_score[0])
+        print('validation accuracy :', validation_score[1])
+
     
     def random_eraser(self, original_img):
         image = np.copy(original_img)
@@ -87,6 +99,7 @@ class TTA_predict():
     
     def _expand(self, x):
         return np.expand_dims(np.expand_dims(x, axis=0), axis=3)
+    validation_score = model.evaluate(valid_x, valid_y)
 
     def create_submit(self):
         predicts = np.argmax(self.predict(), axis=1)
