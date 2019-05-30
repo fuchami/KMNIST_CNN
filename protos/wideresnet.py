@@ -2,7 +2,7 @@
 from keras.models import Model
 from keras.layers import Input, Activation, Dropout, Flatten, Dense, BatchNormalization
 from keras.layers import Conv2D, MaxPooling2D, GlobalAveragePooling2D
-from keras.layers import Add, Multiply
+from keras.layers import Add, Multiply, Lambda, concatenate
 from keras.regularizers import l2
 from keras import backend as K
 
@@ -45,26 +45,56 @@ def expand_conv(init, base, k, strides=(1,1), weight_decay=0.0005):
     m = Add()([x, skip])
     return m
 
-def resblock(input, k=1, k_filter=16, dropout=0.4, weight_decay=0.0005, se_module=False):
+def resblock(input, k=1, k_filter=16, dropout=0.4, weight_decay=0.0005, se_module=False, NeXt=False, cardinality=16):
     init = input
 
-    x = BatchNormalization(momentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(input)
-    x = Conv2D(k_filter * k, (3, 3), padding='same', kernel_initializer='he_normal',
-                kernel_regularizer=l2(weight_decay), use_bias=False)(x)
+    if NeXt == False:
+        print('Wide ResNet')
+        x = BatchNormalization(momentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(input)
+        x = Conv2D(k_filter * k, (3, 3), padding='same', kernel_initializer='he_normal',
+                    kernel_regularizer=l2(weight_decay), use_bias=False)(x)
 
-    x = BatchNormalization(momentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(x)
-    x = Activation('relu')(x)
-    if dropout > 0.0: x = Dropout(dropout)(x)
+        x = BatchNormalization(momentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(x)
+        x = Activation('relu')(x)
+        if dropout > 0.0: x = Dropout(dropout)(x)
 
-    x = Conv2D(k_filter * k, (3, 3), padding='same', kernel_initializer='he_normal',
-                kernel_regularizer=l2(weight_decay), use_bias=False)(x)
+        x = Conv2D(k_filter * k, (3, 3), padding='same', kernel_initializer='he_normal',
+                    kernel_regularizer=l2(weight_decay), use_bias=False)(x)
+        
+        if se_module : x = se_block(x, k_filter*k)
+
+        m = Add()([init, x])
+        return m
     
-    if se_module : x = se_block(x, k_filter*k)
+    # NeXt
+    group_list = []
+    grouped_channels = int((k * k_filter)/ cardinality)
 
-    m = Add()([init, x])
+    for c in range(cardinality):
+        x = Lambda(lambda z: z[:, :, :, c * grouped_channels:(c + 1) * grouped_channels]
+        if K.image_data_format() == 'channels_last' else
+        lambda z: z[:, c * grouped_channels:(c + 1) * grouped_channels, :, :])(input)
+       
+        x = BatchNormalization(momentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(x)
+        x = Conv2D(grouped_channels, (3, 3), padding='same', kernel_initializer='he_normal',
+                    kernel_regularizer=l2(weight_decay), use_bias=False)(x)
+
+        x = BatchNormalization(momentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(x)
+        x = Activation('relu')(x)
+        if dropout > 0.0: x = Dropout(dropout)(x)
+
+        x = Conv2D(grouped_channels, (3, 3), padding='same', kernel_initializer='he_normal',
+                    kernel_regularizer=l2(weight_decay), use_bias=False)(x)
+        
+        if se_module : x = se_block(x, grouped_channels)
+        group_list.append(x)
+    
+    group_merge = concatenate(group_list)
+    m = Add()([init, group_merge])
     return m
 
-def create_wide_residual_network(input_dim, nb_classes=10, N=4, k=10, dropout=0.4, weight_decay=0.0005, se_module=False):
+def create_wide_residual_network(input_dim, nb_classes=10, N=4, k=10, dropout=0.4, 
+                                weight_decay=0.0005, se_module=False, NeXt=False, cardinality=16):
     inputs = Input(shape=input_dim)
 
     # initial_conv
@@ -77,7 +107,7 @@ def create_wide_residual_network(input_dim, nb_classes=10, N=4, k=10, dropout=0.
 
     # conv1
     for i in range(N-1):
-        x = resblock(x, k, k_filter=16, dropout=dropout, se_module=se_module)
+        x = resblock(x, k, k_filter=16, dropout=dropout, se_module=se_module, NeXt=NeXt, cardinality=cardinality)
     x = BatchNormalization(momentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(x)
     x = Activation('relu')(x)
     
@@ -85,7 +115,7 @@ def create_wide_residual_network(input_dim, nb_classes=10, N=4, k=10, dropout=0.
 
     # conv2
     for i in range(N-1):
-        x = resblock(x, k, k_filter=32, dropout=dropout, se_module=se_module)
+        x = resblock(x, k, k_filter=32, dropout=dropout, se_module=se_module, NeXt=NeXt, cardinality=cardinality)
     x = BatchNormalization(momentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(x)
     x = Activation('relu')(x)
 
@@ -93,7 +123,7 @@ def create_wide_residual_network(input_dim, nb_classes=10, N=4, k=10, dropout=0.
 
     # conv3
     for i in range(N-1):
-        x = resblock(x, k, k_filter=64, dropout=dropout, se_module=se_module)
+        x = resblock(x, k, k_filter=64, dropout=dropout, se_module=se_module, NeXt=NeXt, cardinality=cardinality)
     x = BatchNormalization(momentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(x)
     x = Activation('relu')(x)
 
@@ -102,4 +132,3 @@ def create_wide_residual_network(input_dim, nb_classes=10, N=4, k=10, dropout=0.
     model = Model(inputs, x)
 
     return model
-

@@ -10,7 +10,12 @@ import pandas as pd
 import seaborn as sn
 from sklearn.metrics import confusion_matrix
 from keras.preprocessing.image import ImageDataGenerator
+from keras.utils import plot_model
 from tqdm import tqdm
+
+def model_plot(model, para_srt):
+    plot_model(model, to_file='../images/{}.png'.format(para_srt), show_shapes=True) 
+
 
 # test time augmentation
 def tta_prediction(model, test_x, n_examples=10):

@@ -31,8 +31,14 @@ def main(args):
     label_num = 10
 
     """ log params """
-    para_str = '{}_imgsize{}_batchsize{}_{}_SEmodule_{}'.format(
-        args.model, args.imgsize, args.batchsize, args.opt, args.se)
+    if args.model == 'wrn':
+        para_str = '{}-{}-{}-SE-{}-NeXt-{}_imgsize{}_batchsize{}_{}'.format(
+            args.model, args.wrn_n, args.wrn_k, args.se, args.next,
+            args.imgsize, args.batchsize, args.opt)
+    else:
+        para_str = '{}-SE-{}_imgsize{}_batchsize{}_{}'.format(
+            args.model, args.se, args.imgsize, args.batchsize, args.opt)
+
     print("start this params CNN train: ", para_str)
     para_path = '../train_log/' + para_str
     """ model logging """
@@ -76,11 +82,12 @@ def main(args):
     elif args.model == 'wrn':
         # select_model = model.wrn_net(args.imgsize)
         input_dim = (args.imgsize, args.imgsize, 1)
-        model = create_wide_residual_network(input_dim, N=4, k=10, se_module=args.se)
+        model = create_wide_residual_network(input_dim, N=args.wrn_n, k=args.wrn_k, se_module=args.se, NeXt=args.next)
     else:
         raise SyntaxError("please select model")
     # model = multi_gpu_model(select_model, gpus=gpu_count)
     model.summary()
+    tools.model_plot(model, para_str)
 
     """ select optimizer """
     if args.opt == 'sgd':
@@ -175,6 +182,9 @@ if __name__ == "__main__":
                         help='sgd rms adabound')
     parser.add_argument('--se', '-q', default=False,
                         help='add se_module')
+    parser.add_argument('--wrn_n', '-n', type=int, default=4)
+    parser.add_argument('--wrn_k', '-k', type=int, default=10)
+    parser.add_argument('--next', '-x', default=False)
 
     args = parser.parse_args()
 
