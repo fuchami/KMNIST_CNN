@@ -87,7 +87,7 @@ def main(args):
         raise SyntaxError("please select model")
     # model = multi_gpu_model(select_model, gpus=gpu_count)
     model.summary()
-    tools.model_plot(model, para_str)
+    # tools.model_plot(model, para_str)
 
     """ select optimizer """
     if args.opt == 'sgd':
@@ -114,13 +114,11 @@ def main(args):
 
     """ model train """
     history = model.fit_generator(train_generator,
-                        steps_per_epoch = 51000//args.batchsize,
-                        validation_data= valid_generator,
-                        validation_steps=9000//args.batchsize,
+                        steps_per_epoch = 60000//args.batchsize,
                         epochs=args.epochs,
                         callbacks=callbacks)
     """ plot learning history """
-    tools.plot_history(history, para_str, para_path)
+    # tools.plot_history(history, para_str, para_path)
     """ save model """
     model.save(para_path + '/model.h5')
 
@@ -130,12 +128,12 @@ def main(args):
 
     print('Train loss :', train_score[0])
     print('Train accuracy :', train_score[1])
-    print('validation loss :', validation_score[0])
-    print('validation accuracy :', validation_score[1])
+    # print('validation loss :', validation_score[0])
+    # print('validation accuracy :', validation_score[1])
 
     """ logging score """
     with open('../train_log/log.csv', 'a') as f:
-        data = [para_str, train_score[1], train_score[0], validation_score[1], validation_score[0]]
+        data = [para_str, train_score[1], train_score[0]]
         writer = csv.writer(f)
         writer.writerow(data)
 
