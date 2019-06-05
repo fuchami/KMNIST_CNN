@@ -26,13 +26,13 @@ def se_block(in_block, ch, ratio=8):
     x = Dense(ch, activation='sigmoid')(x)
     return Multiply()([in_block, x])
 
-def expand_conv(init, base, k, strides=(1,1), weight_decay=0.0005):
-    x = BatchNormalization(momentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(x)
+def expand_conv(init, base, k, strides=(1,1), weight_decay=0.0005, se_module=False):
+    x = BatchNormalization(momentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(init)
     x = Activation('relu')(x)
 
     x = Conv2D(base * k, (3, 3), padding='same',strides=strides,
                 kernel_initializer='he_normal',
-                kernel_regularizer=l2(weight_decay), use_bias=False)(init)
+                kernel_regularizer=l2(weight_decay), use_bias=False)(x)
 
     x = BatchNormalization(momentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(x)
     x = Activation('relu')(x)
@@ -42,7 +42,6 @@ def expand_conv(init, base, k, strides=(1,1), weight_decay=0.0005):
                 kernel_regularizer=l2(weight_decay), use_bias=False)(x)
     
     if se_module : x = se_block(x, base*k)
-
 
     skip = Conv2D(base * k, (1, 1), padding='same', strides=strides,
                 kernel_initializer='he_normal',
@@ -109,7 +108,7 @@ def create_wide_residual_network(input_dim, nb_classes=10, N=4, k=10, dropout=0.
     x = BatchNormalization(momentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(x)
     x = Activation('relu')(x)
 
-    x = expand_conv(x, 16, k)
+    x = expand_conv(x, 16, k, se_module=se_module)
 
     # conv1
     for i in range(N-1):
@@ -117,7 +116,7 @@ def create_wide_residual_network(input_dim, nb_classes=10, N=4, k=10, dropout=0.
     x = BatchNormalization(momentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(x)
     x = Activation('relu')(x)
     
-    x = expand_conv(x, 32, k, strides=(2,2))
+    x = expand_conv(x, 32, k, strides=(2,2), se_module=se_module)
 
     # conv2
     for i in range(N-1):
@@ -125,7 +124,7 @@ def create_wide_residual_network(input_dim, nb_classes=10, N=4, k=10, dropout=0.
     x = BatchNormalization(momentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(x)
     x = Activation('relu')(x)
 
-    x = expand_conv(x, 64, k, strides=(2,2))
+    x = expand_conv(x, 64, k, strides=(2,2), se_module=se_module)
 
     # conv3
     for i in range(N-1):

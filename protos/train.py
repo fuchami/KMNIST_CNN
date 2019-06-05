@@ -32,7 +32,7 @@ def main(args):
 
     """ log params """
     if args.model == 'wrn':
-        para_str = '{}-{}-{}-SE-{}-NeXt-{}_imgsize{}_batchsize{}_{}'.format(
+        para_str = '{}-{}-{}-SE-{}-NeXt-{}_imgsize{}_batchsize{}_{}=fullTrain_custom_expandConv'.format(
             args.model, args.wrn_n, args.wrn_k, args.se, args.next,
             args.imgsize, args.batchsize, args.opt)
     else:
@@ -171,7 +171,7 @@ def main(args):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='train CNN model for classify')
-    parser.add_argument('--epochs', '-e', type=int, default=200)
+    parser.add_argument('--epochs', '-e', type=int, default=300)
     parser.add_argument('--imgsize', '-s', type=int, default=32)
     parser.add_argument('--batchsize', '-b', type=int, default=128)
     parser.add_argument('--model', '-m', default='prot4',
