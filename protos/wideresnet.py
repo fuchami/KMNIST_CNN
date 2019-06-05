@@ -27,6 +27,9 @@ def se_block(in_block, ch, ratio=8):
     return Multiply()([in_block, x])
 
 def expand_conv(init, base, k, strides=(1,1), weight_decay=0.0005):
+    x = BatchNormalization(momentum=0.1, epsilon=1e-5, gamma_initializer='uniform')(x)
+    x = Activation('relu')(x)
+
     x = Conv2D(base * k, (3, 3), padding='same',strides=strides,
                 kernel_initializer='he_normal',
                 kernel_regularizer=l2(weight_decay), use_bias=False)(init)
@@ -37,6 +40,9 @@ def expand_conv(init, base, k, strides=(1,1), weight_decay=0.0005):
     x = Conv2D(base * k, (3, 3), padding='same',
                 kernel_initializer='he_normal',
                 kernel_regularizer=l2(weight_decay), use_bias=False)(x)
+    
+    if se_module : x = se_block(x, base*k)
+
 
     skip = Conv2D(base * k, (1, 1), padding='same', strides=strides,
                 kernel_initializer='he_normal',

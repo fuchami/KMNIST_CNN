@@ -14,8 +14,6 @@ from keras import regularizers
 from keras.regularizers import l2
 from keras import backend as K
 
-from funcy import concat, identity, juxt, partial, rcompose, repeat, repeatedly, take
-import wrn
 from wideresnet import se_block
 
 def prot4_SE(args):

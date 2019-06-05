@@ -7,7 +7,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import seaborn as sn
 from sklearn.metrics import confusion_matrix
 from keras.preprocessing.image import ImageDataGenerator
 from keras.utils import plot_model
@@ -73,7 +72,7 @@ def print_cmx(y_true, y_pred, parastr):
     df_cmx = pd.DataFrame(cxm_data, index=labels, columns=classes)
 
     plt.figure(figsize = (10, 7))
-    sn.heatmap(df_cmx, annot=True, fmt="d")
+    #sn.heatmap(df_cmx, annot=True, fmt="d")
     plt.title("Confusion Matrix")
     plt.xlabel("predict classes")
     plt.ylabel("true classes")
