@@ -224,6 +224,25 @@ def mygenerator(args, train_x, train_y, valid_x, valid_y, label_num):
     valid_generator = valid_datagen.flow(valid_x, valid_y, batch_size=args.batchsize)
 
     return train_generator, valid_generator
+
+def test_load(imgsize):
+    test_x = np.load('../input/kmnist-test-imgs.npz')['arr_0']
+    test_x = resize(test_x, imgsize)
+
+    """ convert images """
+    test_x = test_x[:, :, :, np.newaxis].astype('float32') / 255.0
+    print('resized test_x shape:', test_x.shape)
+    return test_x
+
+def resize(imgs, imgsize):
+    resized_imgs = []
+    for im in imgs:
+        resized_img = cv2.resize(im, (imgsize, imgsize))
+        resized_imgs.append(resized_img)
+    resized_imgs = np.array(resized_imgs)
+
+    return resized_imgs
+
 if __name__ == '__main__':
     kmnist_dl = KMNISTDataLoader()
     datapath = "./input"
